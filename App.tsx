@@ -2,8 +2,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import AppSplash, { SPLASH_ANIMATION_MS } from './src/components/AppSplash.tsx';
 import type { RootStackParamList } from './src/navigation.ts';
 import ExpenseFormScreen from './src/screens/ExpenseFormScreen.tsx';
 import TripDetailScreen from './src/screens/TripDetailScreen.tsx';
@@ -14,9 +16,12 @@ import { colors } from './src/theme.ts';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-// Keep Android's splash (logo on teal) up until saved trips are loaded,
-// so the app opens straight onto the real trip list without an empty flash.
+// Android's own splash is a plain teal screen (no logo). Keep it up until our
+// animated splash has drawn on the same teal, so the hand-over is invisible.
 SplashScreen.preventAutoHideAsync().catch(() => {});
+
+/** Time the animated splash stays after its animation finishes, before fading out. */
+const SPLASH_HOLD_MS = 300;
 
 function Navigator() {
   return (
@@ -40,15 +45,30 @@ function Navigator() {
   );
 }
 
-/** Hides the splash screen once saved trips are loaded. */
+/** Shows the animated splash until it has played and saved trips are loaded. */
 function Root() {
   const { loaded } = useTrips();
+  const [animationDone, setAnimationDone] = useState(false);
+  const [splashGone, setSplashGone] = useState(false);
 
   useEffect(() => {
-    if (loaded) SplashScreen.hideAsync().catch(() => {});
-  }, [loaded]);
+    const timer = setTimeout(() => setAnimationDone(true), SPLASH_ANIMATION_MS + SPLASH_HOLD_MS);
+    return () => clearTimeout(timer);
+  }, []);
 
-  return <Navigator />;
+  const hideNativeSplash = useCallback(() => {
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
+  const onSplashHidden = useCallback(() => setSplashGone(true), []);
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.primary }}>
+      <Navigator />
+      {splashGone ? null : (
+        <AppSplash visible={!(loaded && animationDone)} onLayout={hideNativeSplash} onHidden={onSplashHidden} />
+      )}
+    </View>
+  );
 }
 
 export default function App() {
