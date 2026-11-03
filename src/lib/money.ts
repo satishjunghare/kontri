@@ -22,6 +22,11 @@ function groupDigits(digits: string, indian: boolean): string {
   return `${rest},${last3}`;
 }
 
+/** Formats minor units without the currency symbol, e.g. 300000 -> "3,000", 3334 -> "33.34". */
+export function formatNumber(minor: number, currency: CurrencyCode): string {
+  return formatMoney(minor, currency).replace(currencySymbol(currency), '');
+}
+
 /** Formats minor units (paise/cents) as a display string, e.g. 300000 -> "₹3,000", 3334 -> "₹33.34". */
 export function formatMoney(minor: number, currency: CurrencyCode): string {
   const sign = minor < 0 ? '-' : '';

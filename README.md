@@ -9,7 +9,8 @@ Split trip expenses equally among friends.
 4. **Advance fund (kitty)**: record money collected in advance (one member, or "everyone gives ₹X"),
    choose who holds the cash, and pay expenses from the fund
 5. **Settle up**: see each member's equal share, who owes and who gets money back,
-   and the fewest payments needed to settle. Share the summary on WhatsApp.
+   and the fewest payments needed to settle. Share it on WhatsApp as a bill / receipt
+   (expenses, totals, each person's share, and amounts due grouped by who receives them).
 
 Everything is stored on the phone (works offline, no login).
 
