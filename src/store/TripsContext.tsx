@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { newId } from '../lib/id.ts';
 import type { Contribution, Expense, Member, Trip } from '../types.ts';
 
+// Kept from the app's old name (TripSplit) so existing saved trips are not lost.
 const STORAGE_KEY = 'tripsplit:v1';
 
 type TripInput = Pick<Trip, 'name' | 'currency' | 'startDate' | 'endDate'>;

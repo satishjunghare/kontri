@@ -27,7 +27,7 @@ export default function App() {
               contentStyle: { backgroundColor: colors.background },
             }}
           >
-            <Stack.Screen name="Trips" component={TripsListScreen} options={{ title: 'TripSplit' }} />
+            <Stack.Screen name="Trips" component={TripsListScreen} options={{ title: 'FairShare' }} />
             <Stack.Screen name="TripForm" component={TripFormScreen} options={{ title: 'New trip' }} />
             <Stack.Screen name="TripDetail" component={TripDetailScreen} />
             <Stack.Screen name="ExpenseForm" component={ExpenseFormScreen} options={{ title: 'Add expense' }} />

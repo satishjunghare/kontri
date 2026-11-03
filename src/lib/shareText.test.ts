@@ -81,7 +81,7 @@ Prathmesh                    496
 --------------------------------
 SATISH RECEIVES            3,148
 --------------------------------
-      Shared via TripSplit
+      Shared via FairShare
 \`\`\``,
   );
 });
@@ -104,7 +104,7 @@ Pay to PRATHMESH
   Saleem                     716
   Prathmesh receives       1,304
 --------------------------------
-      Shared via TripSplit
+      Shared via FairShare
 \`\`\``,
   );
 });
