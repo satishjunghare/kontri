@@ -24,6 +24,17 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "kontri"
+    "scheme": "kontri",
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0F766E",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200
+        }
+      ]
+    ],
+    "backgroundColor": "#0F766E"
   }
 }

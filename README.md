@@ -1,5 +1,7 @@
 # Kontri
 
+*Kontri karo, hisaab barabar.*
+
 Split trip expenses equally among friends.
 
 1. **Create a trip** (name, currency, optional dates)
