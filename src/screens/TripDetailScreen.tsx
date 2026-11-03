@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { EmptyState } from '../components/ui.tsx';
 import { formatMoney } from '../lib/money.ts';
 import { computeSettlement } from '../lib/settlement.ts';
+import { hasCustomSplit } from '../lib/split.ts';
 import type { ScreenProps } from '../navigation.ts';
 import { useTrips } from '../store/TripsContext.tsx';
 import { colors } from '../theme.ts';
@@ -58,7 +59,9 @@ export default function TripDetailScreen({ navigation, route }: ScreenProps<'Tri
         </View>
         <View style={styles.divider} />
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Per person</Text>
+          <Text style={styles.summaryLabel}>
+            {trip.expenses.some(hasCustomSplit) ? 'Avg / person' : 'Per person'}
+          </Text>
           <Text style={styles.summaryValue}>{formatMoney(perPerson, trip.currency)}</Text>
         </View>
         <View style={styles.divider} />

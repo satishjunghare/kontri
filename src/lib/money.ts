@@ -34,14 +34,14 @@ export function formatMoney(minor: number, currency: CurrencyCode): string {
 
 /**
  * Parses user input like "1,234.50" into minor units (123450).
- * Returns null for empty, invalid, zero/negative, or more than 2 decimal places.
+ * Returns null for empty, invalid, negative, zero (unless allowZero), or more than 2 decimal places.
  */
-export function parseAmount(input: string): number | null {
+export function parseAmount(input: string, options?: { allowZero?: boolean }): number | null {
   const cleaned = input.replace(/[,\s]/g, '');
   if (!/^\d+(\.\d{1,2})?$/.test(cleaned) && !/^\.\d{1,2}$/.test(cleaned)) return null;
   const [wholePart, fractionPart = ''] = cleaned.split('.');
   const minor = Number(wholePart || '0') * 100 + Number(fractionPart.padEnd(2, '0'));
-  if (!Number.isSafeInteger(minor) || minor <= 0) return null;
+  if (!Number.isSafeInteger(minor) || minor < 0 || (minor === 0 && !options?.allowZero)) return null;
   return minor;
 }
 

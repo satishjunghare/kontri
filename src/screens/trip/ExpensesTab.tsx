@@ -2,6 +2,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button, Card, EmptyState } from '../../components/ui.tsx';
 import { formatDate } from '../../lib/id.ts';
 import { formatMoney } from '../../lib/money.ts';
+import { hasCustomSplit } from '../../lib/split.ts';
 import { CATEGORY_LABELS, colors } from '../../theme.ts';
 import { FUND_ID } from '../../types.ts';
 import type { Trip } from '../../types.ts';
@@ -51,6 +52,7 @@ export default function ExpensesTab({
                 <Text style={styles.meta}>
                   Paid by {memberName(item.paidBy)} · {formatDate(item.date)}
                 </Text>
+                {hasCustomSplit(item) ? <Text style={styles.custom}>Custom split</Text> : null}
               </View>
               <Text style={styles.amount}>{formatMoney(item.amount, trip.currency)}</Text>
             </Card>
@@ -68,5 +70,17 @@ const styles = StyleSheet.create({
   category: { fontSize: 24 },
   description: { fontSize: 16, fontWeight: '600', color: colors.text },
   meta: { fontSize: 13, color: colors.textMuted, marginTop: 3 },
+  custom: {
+    alignSelf: 'flex-start',
+    marginTop: 5,
+    fontSize: 11,
+    fontWeight: '700',
+    color: colors.primaryDark,
+    backgroundColor: colors.primarySoft,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
   amount: { fontSize: 16, fontWeight: '700', color: colors.text },
 });

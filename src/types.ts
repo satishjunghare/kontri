@@ -16,6 +16,11 @@ export interface Expense {
   paidBy: string;
   date: string; // YYYY-MM-DD
   category: ExpenseCategory;
+  /**
+   * Custom split: members whose share of this expense is fixed (minor units, 0 = not included).
+   * The rest of the amount is split equally among the other members. Missing/empty = equal split.
+   */
+  fixedShares?: Record<string, number>;
   createdAt: number;
 }
 

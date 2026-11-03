@@ -1,5 +1,8 @@
 import { FUND_ID } from '../types.ts';
 import type { Contribution, Expense, Member } from '../types.ts';
+import { expenseShares } from './split.ts';
+
+export { splitEqually } from './split.ts';
 
 export interface MemberBalance {
   memberId: string;
@@ -9,7 +12,7 @@ export interface MemberBalance {
   contributed: number;
   /** Fund cash this member is holding (only the fund holder; negative if the holder covered a shortfall). */
   fundHeld: number;
-  /** This member's equal share of all expenses. */
+  /** This member's share of all expenses (equal split, adjusted by any custom splits). */
   share: number;
   /** paid + contributed - fundHeld - share. Positive = gets money back, negative = owes money. */
   balance: number;
@@ -37,18 +40,6 @@ export interface Settlement {
   fund: FundSummary;
 }
 
-/**
- * Splits `total` (minor units) equally among `count` people.
- * Any leftover minor units (e.g. 100 paise / 3) are handed out one each to the
- * first members, so the shares always add up exactly to the total.
- */
-export function splitEqually(total: number, count: number): number[] {
-  if (count <= 0) return [];
-  const base = Math.floor(total / count);
-  const remainder = total - base * count;
-  return Array.from({ length: count }, (_, i) => base + (i < remainder ? 1 : 0));
-}
-
 /** The member holding the fund's cash: the chosen holder, else the first contributor, else the first member. */
 export function resolveFundHolder(
   members: Member[],
@@ -61,7 +52,7 @@ export function resolveFundHolder(
 }
 
 /**
- * Computes who paid what, each member's equal share, and the list of payments
+ * Computes who paid what, each member's share (equal, or custom per expense), and the list of payments
  * needed to settle up (greedy: largest debtor pays largest creditor).
  *
  * Advance fund: a contribution counts as money the member paid. Expenses paid
@@ -78,6 +69,8 @@ export function computeSettlement(
   fundHolderId?: string,
 ): Settlement {
   const ids = new Set(members.map((m) => m.id));
+  const memberIds = members.map((m) => m.id);
+  const share = new Map<string, number>(members.map((m) => [m.id, 0]));
   const paid = new Map<string, number>(members.map((m) => [m.id, 0]));
   const contributed = new Map<string, number>(members.map((m) => [m.id, 0]));
   let total = 0;
@@ -87,11 +80,15 @@ export function computeSettlement(
   for (const e of expenses) {
     if (e.paidBy === FUND_ID) {
       fundSpent += e.amount;
-      total += e.amount;
     } else if (ids.has(e.paidBy)) {
       paid.set(e.paidBy, paid.get(e.paidBy)! + e.amount);
-      total += e.amount;
+    } else {
+      continue; // ignore expenses of unknown members
     }
+    total += e.amount;
+    if (memberIds.length === 0) continue;
+    const shares = expenseShares(e, memberIds);
+    for (const id of memberIds) share.set(id, share.get(id)! + shares[id]);
   }
   for (const c of contributions) {
     if (!ids.has(c.memberId)) continue;
@@ -102,8 +99,7 @@ export function computeSettlement(
   const remaining = collected - fundSpent;
   const holderId = collected > 0 || fundSpent > 0 ? resolveFundHolder(members, contributions, fundHolderId) : undefined;
 
-  const shares = splitEqually(total, members.length);
-  const balances: MemberBalance[] = members.map((m, i) => {
+  const balances: MemberBalance[] = members.map((m) => {
     const fundHeld = m.id === holderId ? remaining : 0;
     const p = paid.get(m.id)!;
     const c = contributed.get(m.id)!;
@@ -112,8 +108,8 @@ export function computeSettlement(
       paid: p,
       contributed: c,
       fundHeld,
-      share: shares[i],
-      balance: p + c - fundHeld - shares[i],
+      share: share.get(m.id)!,
+      balance: p + c - fundHeld - share.get(m.id)!,
     };
   });
 

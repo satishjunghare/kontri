@@ -100,7 +100,7 @@ export function TripsProvider({ children }: { children: ReactNode }) {
       removeMember: (tripId, memberId) =>
         updateOne(tripId, (t) => {
           const inUse =
-            t.expenses.some((e) => e.paidBy === memberId) ||
+            t.expenses.some((e) => e.paidBy === memberId || (e.fixedShares && memberId in e.fixedShares)) ||
             t.contributions.some((c) => c.memberId === memberId);
           if (inUse) return t; // guarded in UI too
           return { ...t, members: t.members.filter((m) => m.id !== memberId) };

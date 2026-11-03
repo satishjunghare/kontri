@@ -28,6 +28,10 @@ export default function MembersTab({ trip, settlement }: { trip: Trip; settlemen
       notify('Cannot remove', `${member.name} has paid for expenses. Delete or reassign those expenses first.`);
       return;
     }
+    if (trip.expenses.some((e) => e.fixedShares && member.id in e.fixedShares)) {
+      notify('Cannot remove', `${member.name} has a custom amount in an expense split. Reset it first.`);
+      return;
+    }
     if (trip.contributions.some((c) => c.memberId === member.id)) {
       notify('Cannot remove', `${member.name} has contributed to the trip fund. Delete those contributions first.`);
       return;

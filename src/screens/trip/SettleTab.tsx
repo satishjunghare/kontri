@@ -1,12 +1,16 @@
-import { Linking, Platform, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Linking, Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { Button, Card, EmptyState, SectionTitle, notify } from '../../components/ui.tsx';
 import { formatMoney } from '../../lib/money.ts';
 import type { Settlement } from '../../lib/settlement.ts';
 import { buildShareText } from '../../lib/shareText.ts';
+import { expenseShares, hasCustomSplit } from '../../lib/split.ts';
 import { colors } from '../../theme.ts';
+import { FUND_ID } from '../../types.ts';
 import type { Trip } from '../../types.ts';
 
 export default function SettleTab({ trip, settlement }: { trip: Trip; settlement: Settlement }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
   if (trip.members.length === 0 || (settlement.total === 0 && settlement.fund.collected === 0)) {
     return (
       <EmptyState
@@ -20,6 +24,7 @@ export default function SettleTab({ trip, settlement }: { trip: Trip; settlement
   const fmt = (v: number) => formatMoney(v, trip.currency);
   const name = (id: string) => trip.members.find((m) => m.id === id)?.name ?? 'Unknown';
   const text = buildShareText(trip, settlement);
+  const memberIds = trip.members.map((m) => m.id);
 
   const shareWhatsApp = async () => {
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
@@ -85,7 +90,13 @@ export default function SettleTab({ trip, settlement }: { trip: Trip; settlement
       <SectionTitle>Each member&apos;s contribution</SectionTitle>
       <Card style={{ paddingVertical: 4 }}>
         {settlement.balances.map((b, i) => (
-          <View key={b.memberId} style={[styles.balanceRow, i > 0 && styles.border]}>
+          <View key={b.memberId} style={i > 0 && styles.border}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ expanded: expanded === b.memberId }}
+            onPress={() => setExpanded(expanded === b.memberId ? null : b.memberId)}
+            style={styles.balanceRow}
+          >
             <View style={{ flex: 1 }}>
               <Text style={styles.bold}>{name(b.memberId)}</Text>
               <Text style={styles.muted}>
@@ -110,9 +121,36 @@ export default function SettleTab({ trip, settlement }: { trip: Trip; settlement
                 {b.balance > 0 ? `Gets ${fmt(b.balance)}` : b.balance < 0 ? `Owes ${fmt(-b.balance)}` : 'Settled'}
               </Text>
             </View>
+          </Pressable>
+          {expanded === b.memberId ? (
+            <View style={styles.breakdown}>
+              {trip.expenses.length === 0 ? (
+                <Text style={styles.muted}>No expenses yet.</Text>
+              ) : (
+                trip.expenses.map((e) => {
+                  const part = expenseShares(e, memberIds)[b.memberId] ?? 0;
+                  return (
+                    <View key={e.id} style={styles.breakdownRow}>
+                      <Text style={[styles.breakdownText, part === 0 && styles.breakdownZero]} numberOfLines={1}>
+                        {e.description}
+                        {e.paidBy === FUND_ID ? ' 💰' : ''}
+                        {hasCustomSplit(e) ? ' · custom' : ''}
+                      </Text>
+                      <Text style={[styles.breakdownAmount, part === 0 && styles.breakdownZero]}>{fmt(part)}</Text>
+                    </View>
+                  );
+                })
+              )}
+              <View style={[styles.breakdownRow, styles.breakdownTotal]}>
+                <Text style={styles.bold}>Total share</Text>
+                <Text style={styles.bold}>{fmt(b.share)}</Text>
+              </View>
+            </View>
+          ) : null}
           </View>
         ))}
       </Card>
+      <Text style={[styles.muted, { marginTop: 8 }]}>Tap a member to see their share of each expense.</Text>
 
       <Button title="Share on WhatsApp" onPress={shareWhatsApp} style={{ marginTop: 24 }} />
       <Button title="Share…" variant="secondary" onPress={shareOther} style={{ marginTop: 10 }} />
@@ -131,6 +169,12 @@ const styles = StyleSheet.create({
   bold: { fontSize: 16, fontWeight: '600', color: colors.text },
   muted: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
   balanceRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 8 },
+  breakdown: { paddingBottom: 12, paddingLeft: 12, borderLeftWidth: 3, borderLeftColor: colors.primarySoft, marginBottom: 8 },
+  breakdownRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, gap: 8 },
+  breakdownText: { flex: 1, fontSize: 14, color: colors.text },
+  breakdownAmount: { fontSize: 14, color: colors.text, fontWeight: '600' },
+  breakdownZero: { color: colors.textMuted },
+  breakdownTotal: { borderTopWidth: 1, borderTopColor: colors.border, marginTop: 4, paddingTop: 8 },
   badge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   badgeGet: { backgroundColor: colors.successSoft },
   badgeOwe: { backgroundColor: colors.dangerSoft },

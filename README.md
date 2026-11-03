@@ -4,7 +4,8 @@ Split trip expenses equally among friends.
 
 1. **Create a trip** (name, currency, optional dates)
 2. **Add members**
-3. **Add expenses**: who paid, how much, category and date
+3. **Add expenses**: who paid, how much, category and date. Split equally by default, or type a
+   custom amount for some members (0 = not included); the rest is split equally among the others
 4. **Advance fund (kitty)**: record money collected in advance (one member, or "everyone gives ₹X"),
    choose who holds the cash, and pay expenses from the fund
 5. **Settle up**: see each member's equal share, who owes and who gets money back,
@@ -32,7 +33,9 @@ npm run lint
 ## How the settlement works
 
 - Amounts are stored as integers in the smallest unit (paise/cents), so there are no rounding errors.
-- Total ÷ members gives each share. Leftover paise (e.g. ₹100 ÷ 3) go one each to the
+- Each expense is split equally, except members with a custom amount for that expense, who pay
+  exactly that; the remainder is split equally among the rest (`src/lib/split.ts`).
+- Equal parts are rounded to the paisa. Leftover paise (e.g. ₹100 ÷ 3) go one each to the
   first members, so the shares always add up exactly to the total.
 - Advance contributions count as money the member paid. Fund expenses are shared equally like
   any other expense. Money left in the fund is cash the holder has, so it is subtracted from the
