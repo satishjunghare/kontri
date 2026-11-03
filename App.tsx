@@ -20,8 +20,8 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 // animated splash has drawn on the same teal, so the hand-over is invisible.
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-/** Time the animated splash stays after its animation finishes, before fading out. */
-const SPLASH_HOLD_MS = 400;
+/** Time the animated splash stays on screen after its animation finishes, before fading out. */
+const SPLASH_HOLD_MS = 2000;
 
 function Navigator() {
   return (
