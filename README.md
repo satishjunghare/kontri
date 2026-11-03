@@ -18,7 +18,10 @@ Everything is stored on the phone (works offline, no login).
 
 Every push builds an APK with GitHub Actions (`.github/workflows/android-apk.yml`).
 Open the repository's **Releases → "TripSplit (latest build)"** on your phone, download
-`TripSplit.apk` and install it. The APK is signed with a debug key, which is fine for
+`TripSplit.apk` and install it. That APK is for 64-bit phones (almost all phones from the last
+several years); `TripSplit-older-phones.apk` is for phones running 32-bit Android.
+Each APK contains one CPU architecture, with resource shrinking and compressed native
+libraries, to keep the download small. The APK is signed with a debug key, which is fine for
 personal use. For the Play Store, set up a proper signing key or use EAS Build.
 
 ## Develop
