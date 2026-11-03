@@ -39,7 +39,7 @@ export default function TripsListScreen({ navigation }: ScreenProps<'Trips'>) {
           <EmptyState
             emoji="🧳"
             title="No trips yet"
-            subtitle="Create a trip, add your friends, record who paid for what — FairShare tells everyone what they owe."
+            subtitle="Create a trip, add your friends, record who paid for what — Kontri tells everyone what they owe."
           />
           <Button title="Create your first trip" onPress={() => navigation.navigate('TripForm')} />
         </View>

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       older_phones:
-        description: 'Also build the APK for older 32-bit phones (FairShare-older-phones.apk)'
+        description: 'Also build the APK for older 32-bit phones (Kontri-older-phones.apk)'
         type: boolean
         default: false
 
@@ -61,36 +61,36 @@ jobs:
           -Pandroid.enableShrinkResourcesInReleaseBuilds=true
           -Pexpo.useLegacyPackaging=true
       - name: Save 64-bit APK
-        run: cp android/app/build/outputs/apk/release/app-release.apk FairShare.apk
+        run: cp android/app/build/outputs/apk/release/app-release.apk Kontri.apk
       - name: Show APK size
-        run: ls -lh FairShare.apk
+        run: ls -lh Kontri.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: FairShare-apk
-          path: FairShare.apk
+          name: Kontri-apk
+          path: Kontri.apk
       # 32-bit APKs now live in their own release; remove any old copy from this one.
       # Release tags keep the old "tripsplit-" names so existing links keep working.
       - name: Remove old APKs from latest release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          for f in FairShare-older-phones.apk TripSplit.apk TripSplit-older-phones.apk; do
+          for f in Kontri-older-phones.apk TripSplit.apk TripSplit-older-phones.apk; do
             gh release delete-asset tripsplit-latest "$f" --yes --repo "$GITHUB_REPOSITORY" || true
           done
-      - name: Publish to "FairShare latest" release
+      - name: Publish to "Kontri latest" release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: tripsplit-latest
-          name: FairShare (latest build)
+          name: Kontri (latest build)
           prerelease: true
           make_latest: false
-          files: FairShare.apk
+          files: Kontri.apk
           body: |
-            Latest Android build of FairShare from `${{ github.ref_name }}` (commit ${{ github.sha }}).
-            Open this page on your Android phone, download **FairShare.apk**, and install it
+            Latest Android build of Kontri from `${{ github.ref_name }}` (commit ${{ github.sha }}).
+            Open this page on your Android phone, download **Kontri.apk**, and install it
             (allow "Install unknown apps" for your browser when asked).
             For 64-bit phones (almost all phones from the last several years). If it says
-            "App not installed" or "not compatible", use the "FairShare for older phones" release.
+            "App not installed" or "not compatible", use the "Kontri for older phones" release.
 
       # Only when run manually with "older_phones" ticked (Actions -> Android APK -> Run workflow).
       - name: Build release APK (older 32-bit phones)
@@ -105,18 +105,18 @@ jobs:
       - name: Save 32-bit APK
         if: ${{ inputs.older_phones }}
         run: |
-          cp android/app/build/outputs/apk/release/app-release.apk FairShare-older-phones.apk
-          ls -lh FairShare-older-phones.apk
-      - name: Publish to "FairShare for older phones" release
+          cp android/app/build/outputs/apk/release/app-release.apk Kontri-older-phones.apk
+          ls -lh Kontri-older-phones.apk
+      - name: Publish to "Kontri for older phones" release
         if: ${{ inputs.older_phones }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: tripsplit-older-phones
-          name: FairShare for older phones (32-bit)
+          name: Kontri for older phones (32-bit)
           prerelease: true
           make_latest: false
-          files: FairShare-older-phones.apk
+          files: Kontri-older-phones.apk
           body: |
-            Android build of FairShare for older phones running 32-bit Android,
+            Android build of Kontri for older phones running 32-bit Android,
             from `${{ github.ref_name }}` (commit ${{ github.sha }}).
-            Only use this if FairShare.apk from "FairShare (latest build)" will not install.
+            Only use this if Kontri.apk from "Kontri (latest build)" will not install.

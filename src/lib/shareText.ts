@@ -169,7 +169,7 @@ export function buildShareText(trip: Trip, settlement: Settlement): string {
       lines.push(row(`  ${firstName(memberName(r.to))} receives`, num(r.total)));
     }
   }
-  lines.push(LINE, center('Shared via FairShare'));
+  lines.push(LINE, center('Shared via Kontri'));
 
   return [`🧾 *${trip.name} — Final bill*`, '```', ...lines, '```'].join('\n');
 }

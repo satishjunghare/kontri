@@ -1,4 +1,4 @@
-# FairShare
+# Kontri
 
 Split trip expenses equally among friends.
 
@@ -17,11 +17,11 @@ Everything is stored on the phone (works offline, no login).
 ## Install on Android
 
 Every push builds an APK with GitHub Actions (`.github/workflows/android-apk.yml`).
-Open the repository's **Releases → "FairShare (latest build)"** on your phone, download
-`FairShare.apk` and install it. That APK is for 64-bit phones (almost all phones from the last
+Open the repository's **Releases → "Kontri (latest build)"** on your phone, download
+`Kontri.apk` and install it. That APK is for 64-bit phones (almost all phones from the last
 several years). For phones running 32-bit Android, run the workflow manually
 (Actions → Android APK → Run workflow, tick "older phones"); the APK appears in the
-"FairShare for older phones" release.
+"Kontri for older phones" release.
 Each APK contains one CPU architecture, with resource shrinking and compressed native
 libraries, to keep the download small. The APK is signed with a debug key, which is fine for
 personal use. For the Play Store, set up a proper signing key or use EAS Build.
