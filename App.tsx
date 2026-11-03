@@ -21,7 +21,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 /** Time the animated splash stays after its animation finishes, before fading out. */
-const SPLASH_HOLD_MS = 300;
+const SPLASH_HOLD_MS = 400;
 
 function Navigator() {
   return (

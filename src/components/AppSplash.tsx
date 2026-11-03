@@ -10,17 +10,17 @@ const LOGO_SIZE = 150;
 const FLY_DISTANCE = 220;
 
 /** Total length of the opening animation, so the app knows when it may hide the splash. */
-export const SPLASH_ANIMATION_MS = 1700;
+export const SPLASH_ANIMATION_MS = 2400;
 
 type Slice = { source: ImageSourcePropType; dx: number; dy: number; delay: number };
 
 // The three white slices fly in from their corners, one after another.
 const WHITE_SLICES: Slice[] = [
   { source: require('../../assets/splash/slice-top-left.png'), dx: -1, dy: -1, delay: 0 },
-  { source: require('../../assets/splash/slice-top-right.png'), dx: 1, dy: -1, delay: 120 },
-  { source: require('../../assets/splash/slice-bottom-left.png'), dx: -1, dy: 1, delay: 240 },
+  { source: require('../../assets/splash/slice-top-right.png'), dx: 1, dy: -1, delay: 180 },
+  { source: require('../../assets/splash/slice-bottom-left.png'), dx: -1, dy: 1, delay: 360 },
 ];
-const GOLD_SLICE: Slice = { source: require('../../assets/splash/slice-gold.png'), dx: 1, dy: 1, delay: 480 };
+const GOLD_SLICE: Slice = { source: require('../../assets/splash/slice-gold.png'), dx: 1, dy: 1, delay: 720 };
 
 /**
  * "Sab milke" splash: the logo's slices fly in from the corners and join into the
@@ -48,7 +48,7 @@ export default function AppSplash({
     const flyIn = (value: Animated.Value, delay: number) =>
       Animated.timing(value, {
         toValue: 1,
-        duration: 450,
+        duration: 650,
         delay,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
@@ -56,7 +56,7 @@ export default function AppSplash({
     const riseIn = (value: Animated.Value, delay: number) =>
       Animated.timing(value, {
         toValue: 1,
-        duration: 380,
+        duration: 520,
         delay,
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
@@ -64,10 +64,10 @@ export default function AppSplash({
 
     Animated.parallel([
       ...slices.map((v, i) => flyIn(v, WHITE_SLICES[i].delay)),
-      Animated.spring(gold, { toValue: 1, delay: GOLD_SLICE.delay, friction: 5, tension: 70, useNativeDriver: true }),
-      riseIn(title, 950),
-      riseIn(tagline, 1120),
-      riseIn(footer, 1250),
+      Animated.spring(gold, { toValue: 1, delay: GOLD_SLICE.delay, friction: 5, tension: 45, useNativeDriver: true }),
+      riseIn(title, 1350),
+      riseIn(tagline, 1600),
+      riseIn(footer, 1800),
     ]).start();
   }, [slices, gold, title, tagline, footer]);
 
