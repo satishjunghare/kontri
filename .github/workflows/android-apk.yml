@@ -1,0 +1,65 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main, master, 'ccr-*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  build-apk:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - name: Generate native Android project
+        run: npx expo prebuild --platform android --no-install
+      - name: Build release APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk TripSplit.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TripSplit-apk
+          path: TripSplit.apk
+      - name: Publish to "TripSplit latest" release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: tripsplit-latest
+          name: TripSplit (latest build)
+          prerelease: true
+          make_latest: false
+          files: TripSplit.apk
+          body: |
+            Latest Android build of TripSplit from `${{ github.ref_name }}` (commit ${{ github.sha }}).
+            Open this page on your Android phone, download **TripSplit.apk**, and install it
+            (allow "Install unknown apps" for your browser when asked).
