@@ -1,13 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { newId } from '../lib/id.ts';
-import type { Expense, Member, Trip } from '../types.ts';
+import type { Contribution, Expense, Member, Trip } from '../types.ts';
 
 const STORAGE_KEY = 'tripsplit:v1';
 
 type TripInput = Pick<Trip, 'name' | 'currency' | 'startDate' | 'endDate'>;
 type ExpenseInput = Omit<Expense, 'id' | 'createdAt'>;
+type ContributionInput = Omit<Contribution, 'id' | 'createdAt'>;
+
+/** Fills in fields added after v1 so older saved trips keep working. */
+function normalizeTrip(trip: Trip): Trip {
+  return { ...trip, contributions: Array.isArray(trip.contributions) ? trip.contributions : [] };
+}
 
 interface TripsContextValue {
   loaded: boolean;
@@ -22,6 +28,9 @@ interface TripsContextValue {
   addExpense: (tripId: string, input: ExpenseInput) => void;
   updateExpense: (tripId: string, expenseId: string, input: ExpenseInput) => void;
   deleteExpense: (tripId: string, expenseId: string) => void;
+  addContributions: (tripId: string, inputs: ContributionInput[]) => void;
+  deleteContribution: (tripId: string, contributionId: string) => void;
+  setFundHolder: (tripId: string, memberId: string) => void;
 }
 
 const TripsContext = createContext<TripsContextValue | null>(null);
@@ -29,8 +38,6 @@ const TripsContext = createContext<TripsContextValue | null>(null);
 export function TripsProvider({ children }: { children: ReactNode }) {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const tripsRef = useRef(trips);
-  tripsRef.current = trips;
 
   // Load saved trips once on start.
   useEffect(() => {
@@ -39,7 +46,7 @@ export function TripsProvider({ children }: { children: ReactNode }) {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw) as { trips?: Trip[] };
-          if (Array.isArray(parsed.trips)) setTrips(parsed.trips);
+          if (Array.isArray(parsed.trips)) setTrips(parsed.trips.map(normalizeTrip));
         }
       } catch (err) {
         console.warn('Could not load saved trips', err);
@@ -67,7 +74,14 @@ export function TripsProvider({ children }: { children: ReactNode }) {
       trips,
       getTrip: (tripId) => trips.find((t) => t.id === tripId),
       createTrip: (input) => {
-        const trip: Trip = { ...input, id: newId(), members: [], expenses: [], createdAt: Date.now() };
+        const trip: Trip = {
+          ...input,
+          id: newId(),
+          members: [],
+          expenses: [],
+          contributions: [],
+          createdAt: Date.now(),
+        };
         setTrips((prev) => [trip, ...prev]);
         return trip;
       },
@@ -85,7 +99,10 @@ export function TripsProvider({ children }: { children: ReactNode }) {
         })),
       removeMember: (tripId, memberId) =>
         updateOne(tripId, (t) => {
-          if (t.expenses.some((e) => e.paidBy === memberId)) return t; // guarded in UI too
+          const inUse =
+            t.expenses.some((e) => e.paidBy === memberId) ||
+            t.contributions.some((c) => c.memberId === memberId);
+          if (inUse) return t; // guarded in UI too
           return { ...t, members: t.members.filter((m) => m.id !== memberId) };
         }),
       addExpense: (tripId, input) =>
@@ -100,6 +117,21 @@ export function TripsProvider({ children }: { children: ReactNode }) {
         })),
       deleteExpense: (tripId, expenseId) =>
         updateOne(tripId, (t) => ({ ...t, expenses: t.expenses.filter((e) => e.id !== expenseId) })),
+      addContributions: (tripId, inputs) =>
+        updateOne(tripId, (t) => ({
+          ...t,
+          fundHolderId: t.fundHolderId ?? inputs[0]?.memberId,
+          contributions: [
+            ...inputs.map((input) => ({ ...input, id: newId(), createdAt: Date.now() })),
+            ...t.contributions,
+          ],
+        })),
+      deleteContribution: (tripId, contributionId) =>
+        updateOne(tripId, (t) => ({
+          ...t,
+          contributions: t.contributions.filter((c) => c.id !== contributionId),
+        })),
+      setFundHolder: (tripId, memberId) => updateOne(tripId, (t) => ({ ...t, fundHolderId: memberId })),
     }),
     [loaded, trips, updateOne],
   );

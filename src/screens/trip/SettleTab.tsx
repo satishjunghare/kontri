@@ -7,7 +7,7 @@ import { colors } from '../../theme.ts';
 import type { Trip } from '../../types.ts';
 
 export default function SettleTab({ trip, settlement }: { trip: Trip; settlement: Settlement }) {
-  if (trip.members.length === 0 || settlement.total === 0) {
+  if (trip.members.length === 0 || (settlement.total === 0 && settlement.fund.collected === 0)) {
     return (
       <EmptyState
         emoji="⚖️"
@@ -62,15 +62,38 @@ export default function SettleTab({ trip, settlement }: { trip: Trip; settlement
         )}
       </Card>
 
-      <SectionTitle>Each member's contribution</SectionTitle>
+      {settlement.fund.collected > 0 || settlement.fund.spent > 0 ? (
+        <>
+          <SectionTitle>Advance fund</SectionTitle>
+          <Card>
+            <Text style={styles.fundLine}>
+              Collected {fmt(settlement.fund.collected)} · Spent {fmt(settlement.fund.spent)}
+            </Text>
+            {settlement.fund.holderId ? (
+              <Text style={styles.muted}>
+                {settlement.fund.remaining > 0
+                  ? `${name(settlement.fund.holderId)} holds the ${fmt(settlement.fund.remaining)} left over. It is returned through the payments above.`
+                  : settlement.fund.remaining < 0
+                    ? `${name(settlement.fund.holderId)} covered the ${fmt(-settlement.fund.remaining)} shortfall. It is paid back through the payments above.`
+                    : 'The fund is fully used.'}
+              </Text>
+            ) : null}
+          </Card>
+        </>
+      ) : null}
+
+      <SectionTitle>Each member&apos;s contribution</SectionTitle>
       <Card style={{ paddingVertical: 4 }}>
         {settlement.balances.map((b, i) => (
           <View key={b.memberId} style={[styles.balanceRow, i > 0 && styles.border]}>
             <View style={{ flex: 1 }}>
               <Text style={styles.bold}>{name(b.memberId)}</Text>
               <Text style={styles.muted}>
-                Paid {fmt(b.paid)} · Share {fmt(b.share)}
+                Paid {fmt(b.paid)}
+                {b.contributed ? ` · Advance ${fmt(b.contributed)}` : ''} · Share {fmt(b.share)}
               </Text>
+              {b.fundHeld > 0 ? <Text style={styles.muted}>Holding {fmt(b.fundHeld)} fund cash</Text> : null}
+              {b.fundHeld < 0 ? <Text style={styles.muted}>Covered {fmt(-b.fundHeld)} fund shortfall</Text> : null}
             </View>
             <View
               style={[
@@ -104,6 +127,7 @@ const styles = StyleSheet.create({
   transferText: { flex: 1, fontSize: 16 },
   transferAmount: { fontSize: 17, fontWeight: '700', color: colors.primaryDark },
   border: { borderTopWidth: 1, borderTopColor: colors.border },
+  fundLine: { fontSize: 15, fontWeight: '600', color: colors.text, marginBottom: 4 },
   bold: { fontSize: 16, fontWeight: '600', color: colors.text },
   muted: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
   balanceRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 8 },

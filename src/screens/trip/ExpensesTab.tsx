@@ -3,6 +3,7 @@ import { Button, Card, EmptyState } from '../../components/ui.tsx';
 import { formatDate } from '../../lib/id.ts';
 import { formatMoney } from '../../lib/money.ts';
 import { CATEGORY_LABELS, colors } from '../../theme.ts';
+import { FUND_ID } from '../../types.ts';
 import type { Trip } from '../../types.ts';
 
 export default function ExpensesTab({
@@ -25,7 +26,8 @@ export default function ExpensesTab({
     );
   }
 
-  const memberName = (id: string) => trip.members.find((m) => m.id === id)?.name ?? 'Unknown';
+  const memberName = (id: string) =>
+    id === FUND_ID ? '💰 Trip fund' : (trip.members.find((m) => m.id === id)?.name ?? 'Unknown');
   const sorted = [...trip.expenses].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
 
   return (

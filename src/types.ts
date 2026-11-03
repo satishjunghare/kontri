@@ -12,9 +12,22 @@ export interface Expense {
   description: string;
   /** Amount in the smallest currency unit (paise for INR) to avoid floating-point errors. */
   amount: number;
-  paidBy: string; // Member id
+  /** Member id, or FUND_ID when paid from the trip's advance fund. */
+  paidBy: string;
   date: string; // YYYY-MM-DD
   category: ExpenseCategory;
+  createdAt: number;
+}
+
+/** Special `paidBy` value: the expense was paid from the advance fund (kitty). */
+export const FUND_ID = '__fund__';
+
+/** Money a member put into the trip's advance fund before or during the trip. */
+export interface Contribution {
+  id: string;
+  memberId: string;
+  amount: number; // minor units
+  date: string; // YYYY-MM-DD
   createdAt: number;
 }
 
@@ -26,5 +39,9 @@ export interface Trip {
   endDate?: string; // YYYY-MM-DD
   members: Member[];
   expenses: Expense[];
+  /** Advance contributions to the trip fund. */
+  contributions: Contribution[];
+  /** Member who holds the fund's cash. Defaults to the first contributor. */
+  fundHolderId?: string;
   createdAt: number;
 }

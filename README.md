@@ -5,7 +5,9 @@ Split trip expenses equally among friends.
 1. **Create a trip** (name, currency, optional dates)
 2. **Add members**
 3. **Add expenses**: who paid, how much, category and date
-4. **Settle up**: see each member's equal share, who owes and who gets money back,
+4. **Advance fund (kitty)**: record money collected in advance (one member, or "everyone gives ₹X"),
+   choose who holds the cash, and pay expenses from the fund
+5. **Settle up**: see each member's equal share, who owes and who gets money back,
    and the fewest payments needed to settle. Share the summary on WhatsApp.
 
 Everything is stored on the phone (works offline, no login).
@@ -24,6 +26,7 @@ npm install
 npm start          # Expo dev server (Android, iOS, web)
 npm test           # settlement and money unit tests (node:test)
 npm run typecheck
+npm run lint
 ```
 
 ## How the settlement works
@@ -31,7 +34,10 @@ npm run typecheck
 - Amounts are stored as integers in the smallest unit (paise/cents), so there are no rounding errors.
 - Total ÷ members gives each share. Leftover paise (e.g. ₹100 ÷ 3) go one each to the
   first members, so the shares always add up exactly to the total.
-- Balance = paid − share. The person who owes the most pays the person owed the most,
+- Advance contributions count as money the member paid. Fund expenses are shared equally like
+  any other expense. Money left in the fund is cash the holder has, so it is subtracted from the
+  holder's balance (an overspent fund is added instead, since the holder covered it).
+- Balance = paid + advance − fund cash held − share. The person who owes the most pays the person owed the most,
   repeated until everyone is settled (`src/lib/settlement.ts`).
 
 ## Project structure

@@ -2,10 +2,11 @@ import { useLayoutEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button, Chip, EmptyState, Field, confirm } from '../components/ui.tsx';
 import { isValidDate, todayISO } from '../lib/id.ts';
-import { currencySymbol, minorToInput, parseAmount } from '../lib/money.ts';
+import { currencySymbol, formatMoney, minorToInput, parseAmount } from '../lib/money.ts';
 import type { ScreenProps } from '../navigation.ts';
 import { useTrips } from '../store/TripsContext.tsx';
 import { CATEGORY_LABELS, colors } from '../theme.ts';
+import { FUND_ID } from '../types.ts';
 import type { ExpenseCategory } from '../types.ts';
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as ExpenseCategory[];
@@ -30,10 +31,15 @@ export default function ExpenseFormScreen({ navigation, route }: ScreenProps<'Ex
   if (!trip) return <EmptyState emoji="🤷" title="Trip not found" />;
 
   const amount = parseAmount(amountText);
+  const hasFund = trip.contributions.length > 0 || existing?.paidBy === FUND_ID;
+  // Money left in the fund, not counting this expense's previous amount when editing.
+  const fundLeft =
+    trip.contributions.reduce((sum, c) => sum + c.amount, 0) -
+    trip.expenses.filter((e) => e.paidBy === FUND_ID && e.id !== existing?.id).reduce((sum, e) => sum + e.amount, 0);
   const errors = {
     description: description.trim() ? undefined : 'What was this for?',
     amount: amount ? undefined : 'Enter a valid amount (max 2 decimals)',
-    paidBy: trip.members.some((m) => m.id === paidBy) ? undefined : 'Select who paid',
+    paidBy: trip.members.some((m) => m.id === paidBy) || (hasFund && paidBy === FUND_ID) ? undefined : 'Select who paid',
     date: isValidDate(date) ? undefined : 'Use format YYYY-MM-DD',
   };
   const show = (key: keyof typeof errors) => (submitted ? errors[key] : undefined);
@@ -78,11 +84,22 @@ export default function ExpenseFormScreen({ navigation, route }: ScreenProps<'Ex
 
       <Text style={styles.label}>Paid by</Text>
       <View style={styles.chips}>
+        {hasFund ? (
+          <Chip label="💰 Trip fund" selected={paidBy === FUND_ID} onPress={() => setPaidBy(FUND_ID)} />
+        ) : null}
         {trip.members.map((m) => (
           <Chip key={m.id} label={m.name} selected={paidBy === m.id} onPress={() => setPaidBy(m.id)} />
         ))}
       </View>
       {show('paidBy') ? <Text style={styles.error}>{errors.paidBy}</Text> : null}
+      {paidBy === FUND_ID ? (
+        <Text style={[styles.fundInfo, amount && amount > fundLeft ? { color: colors.danger } : null]}>
+          Fund has {formatMoney(fundLeft, trip.currency)} left
+          {amount && amount > fundLeft
+            ? `. The extra ${formatMoney(amount - Math.max(fundLeft, 0), trip.currency)} will count as paid by the fund holder.`
+            : '.'}
+        </Text>
+      ) : null}
 
       <Text style={[styles.label, { marginTop: 8 }]}>Category</Text>
       <View style={styles.chips}>
@@ -117,5 +134,6 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap' },
   error: { color: colors.danger, fontSize: 13, marginBottom: 8 },
+  fundInfo: { fontSize: 13, color: colors.textMuted, marginBottom: 8, lineHeight: 18 },
   hint: { fontSize: 13, color: colors.textMuted, marginBottom: 16, textAlign: 'center' },
 });

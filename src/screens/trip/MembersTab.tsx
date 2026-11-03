@@ -28,10 +28,14 @@ export default function MembersTab({ trip, settlement }: { trip: Trip; settlemen
       notify('Cannot remove', `${member.name} has paid for expenses. Delete or reassign those expenses first.`);
       return;
     }
+    if (trip.contributions.some((c) => c.memberId === member.id)) {
+      notify('Cannot remove', `${member.name} has contributed to the trip fund. Delete those contributions first.`);
+      return;
+    }
     confirm('Remove member?', `Remove ${member.name} from this trip?`, 'Remove', () => removeMember(trip.id, member.id));
   };
 
-  const paidOf = (id: string) => settlement.balances.find((b) => b.memberId === id)?.paid ?? 0;
+  const balanceOf = (id: string) => settlement.balances.find((b) => b.memberId === id);
 
   return (
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -67,7 +71,12 @@ export default function MembersTab({ trip, settlement }: { trip: Trip; settlemen
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.memberName}>{m.name}</Text>
-                  <Text style={styles.meta}>Paid {formatMoney(paidOf(m.id), trip.currency)}</Text>
+                  <Text style={styles.meta}>
+                    Paid {formatMoney(balanceOf(m.id)?.paid ?? 0, trip.currency)}
+                    {balanceOf(m.id)?.contributed
+                      ? ` · Advance ${formatMoney(balanceOf(m.id)!.contributed, trip.currency)}`
+                      : ''}
+                  </Text>
                 </View>
                 <Pressable onPress={() => remove(m)} hitSlop={10} accessibilityLabel={`Remove ${m.name}`}>
                   <Text style={styles.remove}>Remove</Text>

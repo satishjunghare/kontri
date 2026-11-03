@@ -7,14 +7,16 @@ import type { ScreenProps } from '../navigation.ts';
 import { useTrips } from '../store/TripsContext.tsx';
 import { colors } from '../theme.ts';
 import ExpensesTab from './trip/ExpensesTab.tsx';
+import FundTab from './trip/FundTab.tsx';
 import MembersTab from './trip/MembersTab.tsx';
 import SettleTab from './trip/SettleTab.tsx';
 
-type Tab = 'expenses' | 'members' | 'settle';
+type Tab = 'expenses' | 'fund' | 'members' | 'settle';
 const TABS: { key: Tab; label: string }[] = [
   { key: 'expenses', label: 'Expenses' },
+  { key: 'fund', label: 'Fund' },
   { key: 'members', label: 'Members' },
-  { key: 'settle', label: 'Settle up' },
+  { key: 'settle', label: 'Settle' },
 ];
 
 export default function TripDetailScreen({ navigation, route }: ScreenProps<'TripDetail'>) {
@@ -37,7 +39,7 @@ export default function TripDetailScreen({ navigation, route }: ScreenProps<'Tri
   }, [navigation, trip]);
 
   const settlement = useMemo(
-    () => (trip ? computeSettlement(trip.members, trip.expenses) : null),
+    () => (trip ? computeSettlement(trip.members, trip.expenses, trip.contributions, trip.fundHolderId) : null),
     [trip],
   );
 
@@ -88,6 +90,9 @@ export default function TripDetailScreen({ navigation, route }: ScreenProps<'Tri
             onEdit={(expenseId) => navigation.navigate('ExpenseForm', { tripId: trip.id, expenseId })}
             onGoToMembers={() => setTab('members')}
           />
+        )}
+        {tab === 'fund' && (
+          <FundTab trip={trip} settlement={settlement} onGoToMembers={() => setTab('members')} />
         )}
         {tab === 'members' && <MembersTab trip={trip} settlement={settlement} />}
         {tab === 'settle' && <SettleTab trip={trip} settlement={settlement} />}
