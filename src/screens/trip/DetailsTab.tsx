@@ -8,6 +8,7 @@ import { photoUri, savePhoto } from '../../lib/photos.ts';
 import { useTrips } from '../../store/TripsContext.tsx';
 import { colors } from '../../theme.ts';
 import type { Trip } from '../../types.ts';
+import { useBottomInset } from '../../components/useBottomInset.ts';
 
 const MAX_PICK = 10;
 const COLUMNS = 3;
@@ -25,6 +26,7 @@ export default function DetailsTab({
   onOpenNote: (noteId: string) => void;
   onOpenPhoto: (photoId: string) => void;
 }) {
+  const bottomInset = useBottomInset();
   const { addPhotos, toggleChecklistItem } = useTrips();
   const [busy, setBusy] = useState(false);
   const [gridWidth, setGridWidth] = useState(0);
@@ -73,7 +75,7 @@ export default function DetailsTab({
   const size = gridWidth ? Math.floor((gridWidth - gap * (COLUMNS - 1)) / COLUMNS) : 0;
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={[styles.content, { paddingBottom: 40 + bottomInset }]}>
       <Card>
         {hasInfo ? (
           <View style={{ gap: 6 }}>

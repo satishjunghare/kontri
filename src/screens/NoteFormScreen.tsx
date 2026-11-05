@@ -7,8 +7,10 @@ import type { ScreenProps } from '../navigation.ts';
 import { useTrips } from '../store/TripsContext.tsx';
 import { colors } from '../theme.ts';
 import type { ChecklistItem } from '../types.ts';
+import { useBottomInset } from '../components/useBottomInset.ts';
 
 export default function NoteFormScreen({ navigation, route }: ScreenProps<'NoteForm'>) {
+  const bottomInset = useBottomInset();
   const { tripId, noteId } = route.params;
   const { getTrip, addNote, updateNote, deleteNote } = useTrips();
   const trip = getTrip(tripId);
@@ -60,7 +62,7 @@ export default function NoteFormScreen({ navigation, route }: ScreenProps<'NoteF
   };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView style={styles.screen} contentContainerStyle={[styles.content, { paddingBottom: 40 + bottomInset }]} keyboardShouldPersistTaps="handled">
       <Field
         label="Title"
         placeholder="e.g. Hotel booking, Things to carry"

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Button, EmptyState, confirm } from '../components/ui.tsx';
+import { useBottomInset } from '../components/useBottomInset.ts';
 import { photoUri } from '../lib/photos.ts';
 import type { ScreenProps } from '../navigation.ts';
 import { useTrips } from '../store/TripsContext.tsx';
 import { colors } from '../theme.ts';
 
 export default function PhotoViewerScreen({ navigation, route }: ScreenProps<'PhotoViewer'>) {
+  const bottomInset = useBottomInset();
   const { tripId } = route.params;
   const { getTrip, setPhotoCaption, setCoverPhoto, deletePhoto } = useTrips();
   const trip = getTrip(tripId);
@@ -68,7 +70,7 @@ export default function PhotoViewerScreen({ navigation, route }: ScreenProps<'Ph
         ) : null}
       </View>
 
-      <View style={styles.panel}>
+      <View style={[styles.panel, { paddingBottom: 16 + bottomInset }]}>
         <TextInput
           style={styles.caption}
           placeholder="Add a caption"

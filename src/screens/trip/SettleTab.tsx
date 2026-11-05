@@ -8,8 +8,10 @@ import { expenseShares, hasCustomSplit } from '../../lib/split.ts';
 import { colors } from '../../theme.ts';
 import { FUND_ID } from '../../types.ts';
 import type { Trip } from '../../types.ts';
+import { useBottomInset } from '../../components/useBottomInset.ts';
 
 export default function SettleTab({ trip, settlement }: { trip: Trip; settlement: Settlement }) {
+  const bottomInset = useBottomInset();
   const [expanded, setExpanded] = useState<string | null>(null);
   if (trip.members.length === 0 || (settlement.total === 0 && settlement.fund.collected === 0)) {
     return (
@@ -48,7 +50,7 @@ export default function SettleTab({ trip, settlement }: { trip: Trip; settlement
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={[styles.content, { paddingBottom: 40 + bottomInset }]}>
       <SectionTitle>Payments to settle</SectionTitle>
       <Card style={{ paddingVertical: 4 }}>
         {settlement.transfers.length === 0 ? (

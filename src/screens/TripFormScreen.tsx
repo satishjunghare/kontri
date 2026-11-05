@@ -7,8 +7,10 @@ import type { ScreenProps } from '../navigation.ts';
 import { useTrips } from '../store/TripsContext.tsx';
 import { colors } from '../theme.ts';
 import type { CurrencyCode } from '../types.ts';
+import { useBottomInset } from '../components/useBottomInset.ts';
 
 export default function TripFormScreen({ navigation, route }: ScreenProps<'TripForm'>) {
+  const bottomInset = useBottomInset();
   const tripId = route.params?.tripId;
   const { getTrip, createTrip, updateTrip, deleteTrip } = useTrips();
   const existing = tripId ? getTrip(tripId) : undefined;
@@ -67,7 +69,7 @@ export default function TripFormScreen({ navigation, route }: ScreenProps<'TripF
   };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView style={styles.screen} contentContainerStyle={[styles.content, { paddingBottom: 40 + bottomInset }]} keyboardShouldPersistTaps="handled">
       <Field
         label="Trip name"
         placeholder="e.g. Goa Trip 2026"

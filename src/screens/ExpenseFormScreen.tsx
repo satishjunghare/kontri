@@ -9,10 +9,12 @@ import { useTrips } from '../store/TripsContext.tsx';
 import { CATEGORY_LABELS, colors } from '../theme.ts';
 import { FUND_ID } from '../types.ts';
 import type { ExpenseCategory } from '../types.ts';
+import { useBottomInset } from '../components/useBottomInset.ts';
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS) as ExpenseCategory[];
 
 export default function ExpenseFormScreen({ navigation, route }: ScreenProps<'ExpenseForm'>) {
+  const bottomInset = useBottomInset();
   const { tripId, expenseId } = route.params;
   const { getTrip, addExpense, updateExpense, deleteExpense } = useTrips();
   const trip = getTrip(tripId);
@@ -101,7 +103,7 @@ export default function ExpenseFormScreen({ navigation, route }: ScreenProps<'Ex
   };
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView style={styles.screen} contentContainerStyle={[styles.content, { paddingBottom: 40 + bottomInset }]} keyboardShouldPersistTaps="handled">
       <Field
         label={`Amount (${currencySymbol(trip.currency).trim()})`}
         placeholder="0"

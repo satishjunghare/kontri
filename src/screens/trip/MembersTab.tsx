@@ -6,8 +6,10 @@ import type { Settlement } from '../../lib/settlement.ts';
 import { useTrips } from '../../store/TripsContext.tsx';
 import { colors } from '../../theme.ts';
 import type { Member, Trip } from '../../types.ts';
+import { useBottomInset } from '../../components/useBottomInset.ts';
 
 export default function MembersTab({ trip, settlement }: { trip: Trip; settlement: Settlement }) {
+  const bottomInset = useBottomInset();
   const { addMember, removeMember } = useTrips();
   const [name, setName] = useState('');
   const [error, setError] = useState<string>();
@@ -42,7 +44,7 @@ export default function MembersTab({ trip, settlement }: { trip: Trip; settlemen
   const balanceOf = (id: string) => settlement.balances.find((b) => b.memberId === id);
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView contentContainerStyle={[styles.content, { paddingBottom: 40 + bottomInset }]} keyboardShouldPersistTaps="handled">
       <View style={styles.addRow}>
         <TextInput
           style={[styles.input, error ? { borderColor: colors.danger } : null]}

@@ -6,6 +6,7 @@ import { hasCustomSplit } from '../../lib/split.ts';
 import { CATEGORY_LABELS, colors } from '../../theme.ts';
 import { FUND_ID } from '../../types.ts';
 import type { Trip } from '../../types.ts';
+import { useBottomInset } from '../../components/useBottomInset.ts';
 
 export default function ExpensesTab({
   trip,
@@ -18,6 +19,7 @@ export default function ExpensesTab({
   onEdit: (expenseId: string) => void;
   onGoToMembers: () => void;
 }) {
+  const bottomInset = useBottomInset();
   if (trip.members.length === 0) {
     return (
       <View style={styles.padded}>
@@ -33,7 +35,7 @@ export default function ExpensesTab({
 
   return (
     <FlatList
-      contentContainerStyle={styles.list}
+      contentContainerStyle={[styles.list, { paddingBottom: 40 + bottomInset }]}
       data={sorted}
       keyExtractor={(e) => e.id}
       ListHeaderComponent={<Button title="+ Add expense" onPress={onAdd} style={{ marginBottom: 4 }} />}

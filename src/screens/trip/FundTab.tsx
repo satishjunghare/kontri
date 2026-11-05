@@ -7,6 +7,7 @@ import type { Settlement } from '../../lib/settlement.ts';
 import { useTrips } from '../../store/TripsContext.tsx';
 import { colors } from '../../theme.ts';
 import type { Trip } from '../../types.ts';
+import { useBottomInset } from '../../components/useBottomInset.ts';
 
 const EVERYONE = '__everyone__';
 
@@ -19,6 +20,7 @@ export default function FundTab({
   settlement: Settlement;
   onGoToMembers: () => void;
 }) {
+  const bottomInset = useBottomInset();
   const { addContributions, deleteContribution, setFundHolder } = useTrips();
   const [amountText, setAmountText] = useState('');
   const [who, setWho] = useState(EVERYONE);
@@ -58,7 +60,7 @@ export default function FundTab({
   const sorted = [...trip.contributions].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView contentContainerStyle={[styles.content, { paddingBottom: 40 + bottomInset }]} keyboardShouldPersistTaps="handled">
       <Card style={styles.summary}>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryLabel}>Collected</Text>

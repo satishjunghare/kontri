@@ -7,8 +7,10 @@ import { formatMoney } from '../lib/money.ts';
 import type { ScreenProps } from '../navigation.ts';
 import { useTrips } from '../store/TripsContext.tsx';
 import { colors } from '../theme.ts';
+import { useBottomInset } from '../components/useBottomInset.ts';
 
 export default function TripsListScreen({ navigation }: ScreenProps<'Trips'>) {
+  const bottomInset = useBottomInset();
   const { trips, loaded } = useTrips();
 
   useLayoutEffect(() => {
@@ -32,7 +34,7 @@ export default function TripsListScreen({ navigation }: ScreenProps<'Trips'>) {
   return (
     <FlatList
       style={styles.screen}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: 40 + bottomInset }]}
       data={trips}
       keyExtractor={(t) => t.id}
       ListEmptyComponent={
