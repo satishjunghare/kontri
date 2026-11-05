@@ -33,6 +33,14 @@
           "image": "./assets/splash/splash-blank.png",
           "imageWidth": 1
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Kontri needs access to your photos so you can add them to a trip.",
+          "cameraPermission": "Kontri needs the camera so you can take photos for a trip.",
+          "microphonePermission": false
+        }
       ]
     ],
     "backgroundColor": "#0F766E"

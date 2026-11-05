@@ -34,9 +34,9 @@ your WhatsApp group as a clean bill.
 
 ## Screenshots
 
-| Splash | Trips | Add expense | Advance fund | Settle up |
-|:--:|:--:|:--:|:--:|:--:|
-| <img src="docs/screenshots/splash.png" width="160"/> | <img src="docs/screenshots/trips.png" width="160"/> | <img src="docs/screenshots/expense-split.png" width="160"/> | <img src="docs/screenshots/fund.png" width="160"/> | <img src="docs/screenshots/settle.png" width="160"/> |
+| Splash | Trips | Add expense | Advance fund | Settle up | Notes & photos |
+|:--:|:--:|:--:|:--:|:--:|:--:|
+| <img src="docs/screenshots/splash.png" width="160"/> | <img src="docs/screenshots/trips.png" width="160"/> | <img src="docs/screenshots/expense-split.png" width="160"/> | <img src="docs/screenshots/fund.png" width="160"/> | <img src="docs/screenshots/settle.png" width="160"/> | <img src="docs/screenshots/details.png" width="160"/> |
 
 <sub>Screenshots use a sample trip: Pune, 5 friends, ₹500 advance each, and a custom-split dinner.</sub>
 
@@ -44,13 +44,15 @@ your WhatsApp group as a clean bill.
 
 | | Feature | What it does |
 |:--:|---|---|
-| 🧳 | **Trips** | Create trips with a name, currency (₹, $, €, £, AED, ฿) and optional dates |
+| 🧳 | **Trips** | Create trips with a name, currency (₹, $, €, £, AED, ฿), optional dates, destination and description |
 | 👥 | **Members** | Add friends to a trip; duplicate names are blocked |
 | 🧾 | **Expenses** | Amount, description, who paid, category (food, travel, stay, activity, shopping) and date |
 | ⚖️ | **Custom split** | Split equally by default, or fix an amount for some members (₹0 = not included); the rest is split equally among the others, live as you type |
 | 💰 | **Advance fund (kitty)** | Record money collected in advance ("everyone gives ₹2,000"), choose who holds the cash, and pay expenses from the fund; leftover cash is returned in the settlement |
 | ✅ | **Settle up** | Each member's share, who owes and who gets back, and the **fewest payments** needed to settle |
 | 📲 | **WhatsApp bill** | Share the settlement as a receipt-style bill: expenses, totals, shares and amounts due, grouped by who receives the money |
+| 📝 | **Notes & checklists** | As many notes as you like per trip (booking details, phone numbers, packing list), with checklists you tick off and an option to pin important notes |
+| 📷 | **Photos** | Take photos or pick from your gallery, add captions, view full screen, and choose a cover photo that shows on the trips list. Photos are shrunk and stay on your phone |
 | 📴 | **Offline & private** | Everything stays on your phone. No login, no internet needed, no data sent anywhere |
 
 ## How it works
@@ -136,7 +138,7 @@ SATISH RECEIVES            3,148
 |---|---|
 | App | [React Native](https://reactnative.dev) 0.88 + [Expo](https://expo.dev) SDK 58, TypeScript |
 | Navigation | React Navigation (native stack) |
-| Storage | AsyncStorage, on the device only |
+| Storage | AsyncStorage for trips, the app's own folder for photos; on the device only |
 | Logic | Pure TypeScript modules, unit tested with `node:test` |
 | Quality | TypeScript strict mode, ESLint (`eslint-config-expo`) |
 | Build | GitHub Actions: tests → Expo prebuild → Gradle release APK → GitHub Release |
@@ -152,14 +154,18 @@ src/
 ├── lib/                      Pure logic (unit tested)
 │   ├── settlement.ts         Balances, fund handling, fewest-payments algorithm
 │   ├── split.ts              Equal and custom per-expense splits
+│   ├── notes.ts              Note sorting and checklist helpers
+│   ├── photos.ts             Photo shrinking and on-device storage
 │   ├── shareText.ts          WhatsApp bill generator
 │   └── money.ts              Paise parsing and ₹ formatting (Indian digit grouping)
 ├── screens/
 │   ├── TripsListScreen.tsx   All trips
 │   ├── TripFormScreen.tsx    Create / edit trip
 │   ├── TripDetailScreen.tsx  Trip summary + tabs
+│   ├── NoteFormScreen.tsx    Add / edit a note and its checklist
+│   ├── PhotoViewerScreen.tsx Full-screen photo, caption, cover, delete
 │   ├── ExpenseFormScreen.tsx Add / edit expense with split
-│   └── trip/                 Expenses, Fund, Members and Settle tabs
+│   └── trip/                 Expenses, Fund, Members, Settle and Details tabs
 ├── store/TripsContext.tsx    App state + on-device persistence
 └── theme.ts                  Colours and category labels
 assets/                       App icon, adaptive icon, splash slices
@@ -193,13 +199,15 @@ small (about 12 MB). They are signed with a debug key, which is fine for persona
 - [ ] Share a trip with friends so everyone can add expenses (sync)
 - [ ] UPI pay links in the WhatsApp bill
 - [ ] Receipt photos for expenses
+- [ ] Backup and restore a trip (including photos)
 - [ ] Date picker
 - [ ] Marathi / Hindi language
 
 ## Privacy
 
-Kontri has no account, no server and no analytics. Your trips are stored only on your phone,
-and nothing is sent anywhere unless you choose to share a bill.
+Kontri has no account, no server and no analytics. Your trips, notes and photos are stored only on
+your phone, and nothing is sent anywhere unless you choose to share a bill. The camera and photo
+access are used only when you add a photo to a trip.
 
 ## License
 

@@ -7,17 +7,19 @@ import { hasCustomSplit } from '../lib/split.ts';
 import type { ScreenProps } from '../navigation.ts';
 import { useTrips } from '../store/TripsContext.tsx';
 import { colors } from '../theme.ts';
+import DetailsTab from './trip/DetailsTab.tsx';
 import ExpensesTab from './trip/ExpensesTab.tsx';
 import FundTab from './trip/FundTab.tsx';
 import MembersTab from './trip/MembersTab.tsx';
 import SettleTab from './trip/SettleTab.tsx';
 
-type Tab = 'expenses' | 'fund' | 'members' | 'settle';
+type Tab = 'expenses' | 'fund' | 'members' | 'settle' | 'details';
 const TABS: { key: Tab; label: string }[] = [
   { key: 'expenses', label: 'Expenses' },
   { key: 'fund', label: 'Fund' },
   { key: 'members', label: 'Members' },
   { key: 'settle', label: 'Settle' },
+  { key: 'details', label: 'Details' },
 ];
 
 export default function TripDetailScreen({ navigation, route }: ScreenProps<'TripDetail'>) {
@@ -99,6 +101,15 @@ export default function TripDetailScreen({ navigation, route }: ScreenProps<'Tri
         )}
         {tab === 'members' && <MembersTab trip={trip} settlement={settlement} />}
         {tab === 'settle' && <SettleTab trip={trip} settlement={settlement} />}
+        {tab === 'details' && (
+          <DetailsTab
+            trip={trip}
+            onEditTrip={() => navigation.navigate('TripForm', { tripId: trip.id })}
+            onAddNote={() => navigation.navigate('NoteForm', { tripId: trip.id })}
+            onOpenNote={(noteId) => navigation.navigate('NoteForm', { tripId: trip.id, noteId })}
+            onOpenPhoto={(photoId) => navigation.navigate('PhotoViewer', { tripId: trip.id, photoId })}
+          />
+        )}
       </View>
     </View>
   );
@@ -128,6 +139,6 @@ const styles = StyleSheet.create({
   },
   tab: { flex: 1, paddingVertical: 9, borderRadius: 9, alignItems: 'center' },
   tabActive: { backgroundColor: colors.card },
-  tabText: { fontSize: 14, fontWeight: '600', color: colors.textMuted },
+  tabText: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
   tabTextActive: { color: colors.primaryDark },
 });

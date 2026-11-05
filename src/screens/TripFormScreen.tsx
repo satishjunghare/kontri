@@ -14,6 +14,8 @@ export default function TripFormScreen({ navigation, route }: ScreenProps<'TripF
   const existing = tripId ? getTrip(tripId) : undefined;
 
   const [name, setName] = useState(existing?.name ?? '');
+  const [destination, setDestination] = useState(existing?.destination ?? '');
+  const [description, setDescription] = useState(existing?.description ?? '');
   const [currency, setCurrency] = useState<CurrencyCode>(existing?.currency ?? 'INR');
   const [startDate, setStartDate] = useState(existing?.startDate ?? '');
   const [endDate, setEndDate] = useState(existing?.endDate ?? '');
@@ -41,6 +43,8 @@ export default function TripFormScreen({ navigation, route }: ScreenProps<'TripF
     const input = {
       name: name.trim(),
       currency,
+      destination: destination.trim() || undefined,
+      description: description.trim() || undefined,
       startDate: startDate || undefined,
       endDate: endDate || undefined,
     };
@@ -72,6 +76,22 @@ export default function TripFormScreen({ navigation, route }: ScreenProps<'TripF
         autoFocus={!existing}
         error={submitted ? errors.name : undefined}
         returnKeyType="done"
+      />
+
+      <Field
+        label="Destination (optional)"
+        placeholder="e.g. Pune, Goa, Manali"
+        value={destination}
+        onChangeText={setDestination}
+        autoCapitalize="words"
+      />
+      <Field
+        label="Description (optional)"
+        placeholder="A line or two about the trip"
+        value={description}
+        onChangeText={setDescription}
+        multiline
+        style={{ minHeight: 70, textAlignVertical: 'top' }}
       />
 
       <Text style={styles.label}>Currency</Text>

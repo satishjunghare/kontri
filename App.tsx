@@ -8,6 +8,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppSplash, { SPLASH_ANIMATION_MS } from './src/components/AppSplash.tsx';
 import type { RootStackParamList } from './src/navigation.ts';
 import ExpenseFormScreen from './src/screens/ExpenseFormScreen.tsx';
+import NoteFormScreen from './src/screens/NoteFormScreen.tsx';
+import PhotoViewerScreen from './src/screens/PhotoViewerScreen.tsx';
 import TripDetailScreen from './src/screens/TripDetailScreen.tsx';
 import TripFormScreen from './src/screens/TripFormScreen.tsx';
 import TripsListScreen from './src/screens/TripsListScreen.tsx';
@@ -40,6 +42,12 @@ function Navigator() {
         <Stack.Screen name="TripForm" component={TripFormScreen} options={{ title: 'New trip' }} />
         <Stack.Screen name="TripDetail" component={TripDetailScreen} />
         <Stack.Screen name="ExpenseForm" component={ExpenseFormScreen} options={{ title: 'Add expense' }} />
+        <Stack.Screen name="NoteForm" component={NoteFormScreen} options={{ title: 'Note' }} />
+        <Stack.Screen
+          name="PhotoViewer"
+          component={PhotoViewerScreen}
+          options={{ title: 'Photo', headerStyle: { backgroundColor: '#000' }, contentStyle: { backgroundColor: '#000' } }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1,6 +1,7 @@
 import { useLayoutEffect } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button, Card, EmptyState } from '../components/ui.tsx';
+import { photoUri } from '../lib/photos.ts';
 import { formatDate } from '../lib/id.ts';
 import { formatMoney } from '../lib/money.ts';
 import type { ScreenProps } from '../navigation.ts';
@@ -47,14 +48,21 @@ export default function TripsListScreen({ navigation }: ScreenProps<'Trips'>) {
       renderItem={({ item }) => {
         const total = item.expenses.reduce((sum, e) => sum + e.amount, 0);
         const dates = [formatDate(item.startDate), formatDate(item.endDate)].filter(Boolean).join(' – ');
+        const cover = item.photos.find((p) => p.id === item.coverPhotoId);
         return (
           <Pressable onPress={() => navigation.navigate('TripDetail', { tripId: item.id })}>
             {({ pressed }) => (
               <Card style={[styles.tripCard, pressed && { opacity: 0.85 }]}>
+                {cover ? <Image source={{ uri: photoUri(cover.file) }} style={styles.cover} /> : null}
                 <View style={{ flex: 1 }}>
                   <Text style={styles.tripName} numberOfLines={1}>
                     {item.name}
                   </Text>
+                  {item.destination ? (
+                    <Text style={styles.destination} numberOfLines={1}>
+                      📍 {item.destination}
+                    </Text>
+                  ) : null}
                   <Text style={styles.meta}>
                     {item.members.length} member{item.members.length === 1 ? '' : 's'} · {item.expenses.length}{' '}
                     expense{item.expenses.length === 1 ? '' : 's'}
@@ -77,6 +85,8 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
   headerAction: { color: '#fff', fontSize: 16, fontWeight: '600' },
   tripCard: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  cover: { width: 56, height: 56, borderRadius: 10, backgroundColor: colors.border },
+  destination: { fontSize: 13, color: colors.primaryDark, marginTop: 2, fontWeight: '600' },
   tripName: { fontSize: 17, fontWeight: '600', color: colors.text },
   meta: { fontSize: 13, color: colors.textMuted, marginTop: 4 },
   total: { fontSize: 16, fontWeight: '700', color: colors.primaryDark },

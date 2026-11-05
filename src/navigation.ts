@@ -5,6 +5,8 @@ export type RootStackParamList = {
   TripForm: { tripId?: string } | undefined;
   TripDetail: { tripId: string };
   ExpenseForm: { tripId: string; expenseId?: string };
+  NoteForm: { tripId: string; noteId?: string };
+  PhotoViewer: { tripId: string; photoId: string };
 };
 
 export type ScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<RootStackParamList, T>;
