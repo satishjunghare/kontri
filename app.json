@@ -41,7 +41,8 @@
           "cameraPermission": "Kontri needs the camera so you can take photos for a trip.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "backgroundColor": "#0F766E"
   }

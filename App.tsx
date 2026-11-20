@@ -10,6 +10,7 @@ import type { RootStackParamList } from './src/navigation.ts';
 import ExpenseFormScreen from './src/screens/ExpenseFormScreen.tsx';
 import NoteFormScreen from './src/screens/NoteFormScreen.tsx';
 import PhotoViewerScreen from './src/screens/PhotoViewerScreen.tsx';
+import StopFormScreen from './src/screens/StopFormScreen.tsx';
 import TripDetailScreen from './src/screens/TripDetailScreen.tsx';
 import TripFormScreen from './src/screens/TripFormScreen.tsx';
 import TripsListScreen from './src/screens/TripsListScreen.tsx';
@@ -43,6 +44,7 @@ function Navigator() {
         <Stack.Screen name="TripDetail" component={TripDetailScreen} />
         <Stack.Screen name="ExpenseForm" component={ExpenseFormScreen} options={{ title: 'Add expense' }} />
         <Stack.Screen name="NoteForm" component={NoteFormScreen} options={{ title: 'Note' }} />
+        <Stack.Screen name="StopForm" component={StopFormScreen} options={{ title: 'Stop' }} />
         <Stack.Screen
           name="PhotoViewer"
           component={PhotoViewerScreen}

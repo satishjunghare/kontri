@@ -36,6 +36,8 @@ const puneTrip = (fuelPaidBy: string): Trip => ({
   ],
   notes: [],
   photos: [],
+  planDays: [],
+  planStops: [],
   contributions: members.map((m) => ({ id: m.id, memberId: m.id, amount: 50000, date: '2026-10-01', createdAt: 0 })),
   fundHolderId: 'satish',
   createdAt: 0,

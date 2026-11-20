@@ -15,15 +15,15 @@ const CATEGORIES = Object.keys(CATEGORY_LABELS) as ExpenseCategory[];
 
 export default function ExpenseFormScreen({ navigation, route }: ScreenProps<'ExpenseForm'>) {
   const bottomInset = useBottomInset();
-  const { tripId, expenseId } = route.params;
+  const { tripId, expenseId, prefill } = route.params;
   const { getTrip, addExpense, updateExpense, deleteExpense } = useTrips();
   const trip = getTrip(tripId);
   const existing = expenseId ? trip?.expenses.find((e) => e.id === expenseId) : undefined;
 
-  const [description, setDescription] = useState(existing?.description ?? '');
-  const [amountText, setAmountText] = useState(existing ? minorToInput(existing.amount) : '');
+  const [description, setDescription] = useState(existing?.description ?? prefill?.description ?? '');
+  const [amountText, setAmountText] = useState(existing ? minorToInput(existing.amount) : prefill?.amount ? minorToInput(prefill.amount) : '');
   const [paidBy, setPaidBy] = useState(existing?.paidBy ?? (trip?.members.length === 1 ? trip.members[0].id : ''));
-  const [category, setCategory] = useState<ExpenseCategory>(existing?.category ?? 'food');
+  const [category, setCategory] = useState<ExpenseCategory>(existing?.category ?? prefill?.category ?? 'food');
   const [date, setDate] = useState(existing?.date ?? todayISO());
   // Custom amounts typed per member (text, so the user can edit freely). Missing key = auto.
   const [fixedText, setFixedText] = useState<Record<string, string>>(() =>

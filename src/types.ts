@@ -63,6 +63,47 @@ export interface Photo {
   createdAt: number;
 }
 
+export type StopType = 'place' | 'meal' | 'shopping' | 'fuel' | 'stay' | 'other';
+
+/** One day of the trip plan. */
+export interface PlanDay {
+  id: string;
+  label: string; // e.g. "Day 1" or "Day 0 (night travel)"
+  date?: string; // YYYY-MM-DD
+}
+
+/** A place to visit, eat, shop, fuel up or stay at, on one day of the plan. */
+export interface PlanStop {
+  id: string;
+  dayId: string;
+  type: StopType;
+  name: string;
+  address?: string;
+  lat?: number;
+  lng?: number;
+  /** Start time, in minutes after midnight (0-1439). */
+  startMin: number;
+  /** How long you stay, in minutes. A stay can run past midnight. */
+  durationMin: number;
+  notes?: string;
+  done?: boolean;
+  /** Planned spend at this stop, in minor units (paise). */
+  budget?: number;
+  /** YOUR estimate of the travel time from the previous stop of the same day, in minutes. */
+  travelUserMin?: number;
+  /** What the app calculated for the same leg. Kept separate from your estimate. */
+  suggestion?: TravelSuggestion;
+}
+
+export interface TravelSuggestion {
+  min: number;
+  km: number;
+  /** 'road' = from a routing service; 'estimate' = straight-line guess (used when offline). */
+  source: 'road' | 'estimate';
+  /** Identifies the pair of places it was calculated for, so a changed place makes it stale. */
+  key: string;
+}
+
 export interface Trip {
   id: string;
   name: string;
@@ -75,6 +116,8 @@ export interface Trip {
   expenses: Expense[];
   notes: Note[];
   photos: Photo[];
+  planDays: PlanDay[];
+  planStops: PlanStop[];
   /** Photo shown on the trips list and trip header. */
   coverPhotoId?: string;
   /** Advance contributions to the trip fund. */

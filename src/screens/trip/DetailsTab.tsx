@@ -133,6 +133,7 @@ export default function DetailsTab({
                     onPress={() => toggleChecklistItem(trip.id, note.id, item.id)}
                     accessibilityRole="checkbox"
                     accessibilityState={{ checked: item.done }}
+              aria-checked={item.done}
                     style={styles.itemRow}
                   >
                     <View style={[styles.box, item.done && styles.boxDone]}>

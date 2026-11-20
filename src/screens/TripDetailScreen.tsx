@@ -1,20 +1,24 @@
-import { useLayoutEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 import { EmptyState } from '../components/ui.tsx';
 import { formatMoney } from '../lib/money.ts';
 import { computeSettlement } from '../lib/settlement.ts';
 import { hasCustomSplit } from '../lib/split.ts';
 import type { ScreenProps } from '../navigation.ts';
 import { useTrips } from '../store/TripsContext.tsx';
+import { STOP_TYPES } from '../lib/plan.ts';
 import { colors } from '../theme.ts';
 import DetailsTab from './trip/DetailsTab.tsx';
 import ExpensesTab from './trip/ExpensesTab.tsx';
 import FundTab from './trip/FundTab.tsx';
 import MembersTab from './trip/MembersTab.tsx';
+import PlanTab from './trip/PlanTab.tsx';
 import SettleTab from './trip/SettleTab.tsx';
 
-type Tab = 'expenses' | 'fund' | 'members' | 'settle' | 'details';
+type Tab = 'plan' | 'expenses' | 'fund' | 'members' | 'settle' | 'details';
 const TABS: { key: Tab; label: string }[] = [
+  { key: 'plan', label: '🗺️ Plan' },
   { key: 'expenses', label: 'Expenses' },
   { key: 'fund', label: 'Fund' },
   { key: 'members', label: 'Members' },
@@ -26,6 +30,8 @@ export default function TripDetailScreen({ navigation, route }: ScreenProps<'Tri
   const { getTrip } = useTrips();
   const trip = getTrip(route.params.tripId);
   // New trips start on Members, since you need people before expenses.
+  const tabScroll = useRef<ScrollViewInstance>(null);
+  const tabX = useRef<Record<string, number>>({});
   const [tab, setTab] = useState<Tab>(trip && trip.members.length === 0 ? 'members' : 'expenses');
 
   useLayoutEffect(() => {
@@ -40,6 +46,12 @@ export default function TripDetailScreen({ navigation, route }: ScreenProps<'Tri
         : undefined,
     });
   }, [navigation, trip]);
+
+  // Keep the chosen tab visible in the scrolling tab row.
+  useEffect(() => {
+    const x = tabX.current[tab];
+    if (x !== undefined) tabScroll.current?.scrollTo({ x: Math.max(0, x - 48), animated: true });
+  }, [tab]);
 
   const settlement = useMemo(
     () => (trip ? computeSettlement(trip.members, trip.expenses, trip.contributions, trip.fundHolderId) : null),
@@ -74,20 +86,41 @@ export default function TripDetailScreen({ navigation, route }: ScreenProps<'Tri
       </View>
 
       <View style={styles.tabs}>
-        {TABS.map((t) => (
-          <Pressable
-            key={t.key}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: tab === t.key }}
-            onPress={() => setTab(t.key)}
-            style={[styles.tab, tab === t.key && styles.tabActive]}
-          >
-            <Text style={[styles.tabText, tab === t.key && styles.tabTextActive]}>{t.label}</Text>
-          </Pressable>
-        ))}
+        <ScrollView ref={tabScroll} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsInner}>
+          {TABS.map((t) => (
+            <Pressable
+              key={t.key}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: tab === t.key }}
+              onPress={() => setTab(t.key)}
+              onLayout={(e) => {
+                tabX.current[t.key] = e.nativeEvent.layout.x;
+              }}
+              style={[styles.tab, tab === t.key && styles.tabActive]}
+            >
+              <Text style={[styles.tabText, tab === t.key && styles.tabTextActive]}>{t.label}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
       </View>
 
       <View style={{ flex: 1 }}>
+        {tab === 'plan' && (
+          <PlanTab
+            trip={trip}
+            onAddStop={(dayId) => navigation.navigate('StopForm', { tripId: trip.id, dayId })}
+            onOpenStop={(stopId) => {
+              const stop = trip.planStops.find((s) => s.id === stopId);
+              if (stop) navigation.navigate('StopForm', { tripId: trip.id, dayId: stop.dayId, stopId });
+            }}
+            onAddExpense={(stop) =>
+              navigation.navigate('ExpenseForm', {
+                tripId: trip.id,
+                prefill: { description: stop.name, category: STOP_TYPES[stop.type].expenseCategory, amount: stop.budget },
+              })
+            }
+          />
+        )}
         {tab === 'expenses' && (
           <ExpensesTab
             trip={trip}
@@ -135,9 +168,9 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     backgroundColor: colors.border,
     borderRadius: 12,
-    padding: 4,
   },
-  tab: { flex: 1, paddingVertical: 9, borderRadius: 9, alignItems: 'center' },
+  tabsInner: { padding: 4, gap: 2 },
+  tab: { paddingVertical: 9, paddingHorizontal: 15, borderRadius: 9, alignItems: 'center' },
   tabActive: { backgroundColor: colors.card },
   tabText: { fontSize: 13, fontWeight: '600', color: colors.textMuted },
   tabTextActive: { color: colors.primaryDark },

@@ -4,7 +4,9 @@ import type { ReactNode } from 'react';
 import { newId } from '../lib/id.ts';
 import { cleanChecklist } from '../lib/notes.ts';
 import { deletePhotoFile } from '../lib/photos.ts';
-import type { ChecklistItem, Contribution, Expense, Member, Note, Photo, Trip } from '../types.ts';
+import { applyStopEdit, moveStop as moveStopInList, moveStopToDay as moveStopToDayInList } from '../lib/plan.ts';
+import type { StopPatch } from '../lib/plan.ts';
+import type { ChecklistItem, Contribution, Expense, Member, Note, Photo, PlanDay, PlanStop, Trip, TravelSuggestion } from '../types.ts';
 
 // Kept from the app's old name (TripSplit) so existing saved trips are not lost.
 const STORAGE_KEY = 'tripsplit:v1';
@@ -17,6 +19,7 @@ export interface NoteInput {
   pinned: boolean;
 }
 type PhotoInput = Pick<Photo, 'file' | 'width' | 'height'>;
+export type StopInput = Omit<PlanStop, 'id'>;
 type ExpenseInput = Omit<Expense, 'id' | 'createdAt'>;
 type ContributionInput = Omit<Contribution, 'id' | 'createdAt'>;
 
@@ -27,6 +30,8 @@ function normalizeTrip(trip: Trip): Trip {
     contributions: Array.isArray(trip.contributions) ? trip.contributions : [],
     notes: Array.isArray(trip.notes) ? trip.notes : [],
     photos: Array.isArray(trip.photos) ? trip.photos : [],
+    planDays: Array.isArray(trip.planDays) ? trip.planDays : [],
+    planStops: Array.isArray(trip.planStops) ? trip.planStops : [],
   };
 }
 
@@ -55,6 +60,17 @@ interface TripsContextValue {
   setPhotoCaption: (tripId: string, photoId: string, caption: string) => void;
   setCoverPhoto: (tripId: string, photoId: string | undefined) => void;
   deletePhoto: (tripId: string, photoId: string) => void;
+  addDay: (tripId: string, input: { label: string; date?: string }) => PlanDay;
+  updateDay: (tripId: string, dayId: string, input: { label: string; date?: string }) => void;
+  deleteDay: (tripId: string, dayId: string) => void;
+  addStop: (tripId: string, input: StopInput) => PlanStop;
+  /** With `shift`, later stops of the same day move along with this stop's end time. */
+  updateStop: (tripId: string, stopId: string, patch: StopPatch, shift: boolean) => void;
+  deleteStop: (tripId: string, stopId: string) => void;
+  moveStop: (tripId: string, stopId: string, direction: -1 | 1) => void;
+  moveStopToDay: (tripId: string, stopId: string, dayId: string) => void;
+  /** Stores the app's own calculated travel time; never touches your estimate. */
+  setStopSuggestion: (tripId: string, stopId: string, suggestion: TravelSuggestion) => void;
 }
 
 const TripsContext = createContext<TripsContextValue | null>(null);
@@ -106,6 +122,8 @@ export function TripsProvider({ children }: { children: ReactNode }) {
           contributions: [],
           notes: [],
           photos: [],
+          planDays: [],
+          planStops: [],
           createdAt: Date.now(),
         };
         setTrips((prev) => [trip, ...prev]);
@@ -229,6 +247,40 @@ export function TripsProvider({ children }: { children: ReactNode }) {
           coverPhotoId: t.coverPhotoId === photoId ? undefined : t.coverPhotoId,
         }));
       },
+      addDay: (tripId, input) => {
+        const day: PlanDay = { id: newId(), label: input.label.trim() || 'Day', date: input.date || undefined };
+        updateOne(tripId, (t) => ({ ...t, planDays: [...t.planDays, day] }));
+        return day;
+      },
+      updateDay: (tripId, dayId, input) =>
+        updateOne(tripId, (t) => ({
+          ...t,
+          planDays: t.planDays.map((d) => (d.id === dayId ? { ...d, label: input.label.trim() || d.label, date: input.date || undefined } : d)),
+        })),
+      deleteDay: (tripId, dayId) =>
+        updateOne(tripId, (t) => ({
+          ...t,
+          planDays: t.planDays.filter((d) => d.id !== dayId),
+          planStops: t.planStops.filter((st) => st.dayId !== dayId),
+        })),
+      addStop: (tripId, input) => {
+        const stop: PlanStop = { ...input, id: newId(), name: input.name.trim() };
+        updateOne(tripId, (t) => ({ ...t, planStops: [...t.planStops, stop] }));
+        return stop;
+      },
+      updateStop: (tripId, stopId, patch, shift) =>
+        updateOne(tripId, (t) => ({ ...t, planStops: applyStopEdit(t.planStops, stopId, patch, shift) })),
+      deleteStop: (tripId, stopId) =>
+        updateOne(tripId, (t) => ({ ...t, planStops: t.planStops.filter((st) => st.id !== stopId) })),
+      moveStop: (tripId, stopId, direction) =>
+        updateOne(tripId, (t) => ({ ...t, planStops: moveStopInList(t.planStops, stopId, direction) })),
+      moveStopToDay: (tripId, stopId, dayId) =>
+        updateOne(tripId, (t) => ({ ...t, planStops: moveStopToDayInList(t.planStops, stopId, dayId) })),
+      setStopSuggestion: (tripId, stopId, suggestion) =>
+        updateOne(tripId, (t) => ({
+          ...t,
+          planStops: t.planStops.map((st) => (st.id === stopId ? { ...st, suggestion } : st)),
+        })),
     }),
     [loaded, trips, updateOne],
   );

@@ -34,9 +34,9 @@ your WhatsApp group as a clean bill.
 
 ## Screenshots
 
-| Splash | Trips | Add expense | Advance fund | Settle up | Notes & photos |
-|:--:|:--:|:--:|:--:|:--:|:--:|
-| <img src="docs/screenshots/splash.png" width="160"/> | <img src="docs/screenshots/trips.png" width="160"/> | <img src="docs/screenshots/expense-split.png" width="160"/> | <img src="docs/screenshots/fund.png" width="160"/> | <img src="docs/screenshots/settle.png" width="160"/> | <img src="docs/screenshots/details.png" width="160"/> |
+| Splash | Trips | Trip plan | Add expense | Advance fund | Settle up | Notes & photos |
+|:--:|:--:|:--:|:--:|:--:|:--:|:--:|
+| <img src="docs/screenshots/splash.png" width="160"/> | <img src="docs/screenshots/trips.png" width="160"/> | <img src="docs/screenshots/plan.png" width="160"/> | <img src="docs/screenshots/expense-split.png" width="160"/> | <img src="docs/screenshots/fund.png" width="160"/> | <img src="docs/screenshots/settle.png" width="160"/> | <img src="docs/screenshots/details.png" width="160"/> |
 
 <sub>Screenshots use a sample trip: Pune, 5 friends, ₹500 advance each, and a custom-split dinner.</sub>
 
@@ -51,6 +51,10 @@ your WhatsApp group as a clean bill.
 | 💰 | **Advance fund (kitty)** | Record money collected in advance ("everyone gives ₹2,000"), choose who holds the cash, and pay expenses from the fund; leftover cash is returned in the settlement |
 | ✅ | **Settle up** | Each member's share, who owes and who gets back, and the **fewest payments** needed to settle |
 | 📲 | **WhatsApp bill** | Share the settlement as a receipt-style bill: expenses, totals, shares and amounts due, grouped by who receives the money |
+| 🗺️ | **Trip plan** | Plan the whole trip day by day: places to visit with start time and stay length, plus meals, shopping, fuel stops and overnight stays. Add a place by search, by dropping a pin on the map, or by pasting a Google Maps link |
+| 🚗 | **Travel times** | Between stops, type **your own estimate** and see the **app's calculation** (road time and distance) next to it, kept separate. A warning appears if there isn't enough time, with a one-tap "Fix timing" |
+| 📍 | **Map view** | All the stops on a map, numbered and coloured by day, each with its visit time and the travel time between stops. Tap a pin for details, navigation in Google Maps, or to add it as an expense |
+| 🧭 | **On the trip** | "Now / Next" for today's plan, tick stops as done, planned budget against what you have spent, and share the whole plan on WhatsApp with a route link for each day |
 | 📝 | **Notes & checklists** | As many notes as you like per trip (booking details, phone numbers, packing list), with checklists you tick off and an option to pin important notes |
 | 📷 | **Photos** | Take photos or pick from your gallery, add captions, view full screen, and choose a cover photo that shows on the trips list. Photos are shrunk and stay on your phone |
 | 📴 | **Offline & private** | Everything stays on your phone. No login, no internet needed, no data sent anywhere |
@@ -138,6 +142,7 @@ SATISH RECEIVES            3,148
 |---|---|
 | App | [React Native](https://reactnative.dev) 0.88 + [Expo](https://expo.dev) SDK 58, TypeScript |
 | Navigation | React Navigation (native stack) |
+| Map | [Leaflet](https://leafletjs.com) with [OpenStreetMap](https://www.openstreetmap.org) tiles inside a WebView (no API key); place search by [Photon](https://photon.komoot.io), road times by [OSRM](https://project-osrm.org), pin names by [Nominatim](https://nominatim.org) |
 | Storage | AsyncStorage for trips, the app's own folder for photos; on the device only |
 | Logic | Pure TypeScript modules, unit tested with `node:test` |
 | Quality | TypeScript strict mode, ESLint (`eslint-config-expo`) |
@@ -150,10 +155,13 @@ App.tsx                       Navigation, providers, splash hand-over
 src/
 ├── components/
 │   ├── AppSplash.tsx         Animated "Sab milke" splash screen
+│   ├── PlanMap.tsx           Map of the stops (WebView; PlanMap.web.tsx in the browser)
 │   └── ui.tsx                Buttons, cards, inputs, chips, dialogs
 ├── lib/                      Pure logic (unit tested)
 │   ├── settlement.ts         Balances, fund handling, fewest-payments algorithm
 │   ├── split.ts              Equal and custom per-expense splits
+│   ├── plan.ts               Trip plan logic: times, travel, warnings, links, sharing
+│   ├── geo.ts                Place search, travel time and pin-name lookups
 │   ├── notes.ts              Note sorting and checklist helpers
 │   ├── photos.ts             Photo shrinking and on-device storage
 │   ├── shareText.ts          WhatsApp bill generator
@@ -162,10 +170,11 @@ src/
 │   ├── TripsListScreen.tsx   All trips
 │   ├── TripFormScreen.tsx    Create / edit trip
 │   ├── TripDetailScreen.tsx  Trip summary + tabs
+│   ├── StopFormScreen.tsx    Add / edit a plan stop (place, times, travel)
 │   ├── NoteFormScreen.tsx    Add / edit a note and its checklist
 │   ├── PhotoViewerScreen.tsx Full-screen photo, caption, cover, delete
 │   ├── ExpenseFormScreen.tsx Add / edit expense with split
-│   └── trip/                 Expenses, Fund, Members, Settle and Details tabs
+│   └── trip/                 Plan, Expenses, Fund, Members, Settle and Details tabs
 ├── store/TripsContext.tsx    App state + on-device persistence
 └── theme.ts                  Colours and category labels
 assets/                       App icon, adaptive icon, splash slices
@@ -182,6 +191,7 @@ npm start            # Expo dev server (Android, iOS, web)
 npm test             # unit tests for settlement, splits, money and the bill
 npm run typecheck    # TypeScript
 npm run lint         # ESLint
+npm run build:map    # rebuild src/map/mapHtml.ts after changing scripts/map-page.* or Leaflet
 ```
 
 ### Building the APK
@@ -196,6 +206,7 @@ small (about 12 MB). They are signed with a debug key, which is fine for persona
 ## Roadmap
 
 - [ ] Mark payments as **paid ✓** after the trip
+- [ ] Download map areas for offline use
 - [ ] Share a trip with friends so everyone can add expenses (sync)
 - [ ] UPI pay links in the WhatsApp bill
 - [ ] Receipt photos for expenses
@@ -207,7 +218,9 @@ small (about 12 MB). They are signed with a debug key, which is fine for persona
 
 Kontri has no account, no server and no analytics. Your trips, notes and photos are stored only on
 your phone, and nothing is sent anywhere unless you choose to share a bill. The camera and photo
-access are used only when you add a photo to a trip.
+access are used only when you add a photo to a trip. The map and place search need the internet: the
+place names you type and the coordinates of your stops are sent to the free OpenStreetMap-based
+services listed above to draw the map, find places and work out travel times.
 
 ## License
 

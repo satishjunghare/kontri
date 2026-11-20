@@ -88,6 +88,7 @@ export default function NoteFormScreen({ navigation, route }: ScreenProps<'NoteF
               onPress={() => toggleItem(item.id)}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: item.done }}
+              aria-checked={item.done}
               accessibilityLabel={item.text}
               hitSlop={8}
               style={[styles.box, item.done && styles.boxDone]}
