@@ -51,13 +51,15 @@ your WhatsApp group as a clean bill.
 | 💰 | **Advance fund (kitty)** | Record money collected in advance ("everyone gives ₹2,000"), choose who holds the cash, and pay expenses from the fund; leftover cash is returned in the settlement |
 | ✅ | **Settle up** | Each member's share, who owes and who gets back, and the **fewest payments** needed to settle |
 | 📲 | **WhatsApp bill** | Share the settlement as a receipt-style bill: expenses, totals, shares and amounts due, grouped by who receives the money |
-| 🗺️ | **Trip plan** | Plan the whole trip day by day: places to visit with start time and stay length, plus meals, shopping, fuel stops and overnight stays. Add a place by search, by dropping a pin on the map, or by pasting a Google Maps link |
-| 🚗 | **Travel times** | Between stops, type **your own estimate** and see the **app's calculation** (road time and distance) next to it, kept separate. A warning appears if there isn't enough time, with a one-tap "Fix timing" |
-| 📍 | **Map view** | All the stops on a map, numbered and coloured by day, each with its visit time and the travel time between stops. Tap a pin for details, navigation in Google Maps, or to add it as an expense |
-| 🧭 | **On the trip** | "Now / Next" for today's plan, tick stops as done, planned budget against what you have spent, and share the whole plan on WhatsApp with a route link for each day |
+| 🗺️ | **Trip plan** | Plan the whole trip day by day: the places you will visit, in order, plus meals, shopping, fuel stops and overnight stays, each with notes. Add a place by search, by dropping a pin on the map, or by pasting a Google Maps link |
+| 🚗 | **Travel times** | The app calculates the road distance and driving time between consecutive stops and shows it in the list and on the map (a rough straight-line guess when offline) |
+| 📍 | **Map view** | All the stops on a map, numbered and coloured by day, joined by route lines. Tap a pin for details, navigation in Google Maps, or to add it as an expense |
+| 🧭 | **On the trip** | Tick stops as done, open any stop or the whole day's route in Google Maps, and share the plan on WhatsApp |
 | 📝 | **Notes & checklists** | As many notes as you like per trip (booking details, phone numbers, packing list), with checklists you tick off and an option to pin important notes |
 | 📷 | **Photos** | Take photos or pick from your gallery, add captions, view full screen, and choose a cover photo that shows on the trips list. Photos are shrunk and stay on your phone |
 | 📴 | **Offline & private** | Everything stays on your phone. No login, no internet needed, no data sent anywhere |
+
+> **Planning details switched off for now:** start times, stay lengths, planned budgets, your own travel-time estimates, "not enough time" warnings and Now / Next are built but hidden to keep the planner simple. Turn them back on with `PLAN_TIMING` in `src/lib/features.ts`.
 
 ## How it works
 
@@ -161,6 +163,7 @@ src/
 │   ├── settlement.ts         Balances, fund handling, fewest-payments algorithm
 │   ├── split.ts              Equal and custom per-expense splits
 │   ├── plan.ts               Trip plan logic: times, travel, warnings, links, sharing
+│   ├── features.ts           Feature switch for the plan's timing details (PLAN_TIMING)
 │   ├── geo.ts                Place search, travel time and pin-name lookups
 │   ├── notes.ts              Note sorting and checklist helpers
 │   ├── photos.ts             Photo shrinking and on-device storage

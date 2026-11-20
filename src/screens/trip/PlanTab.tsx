@@ -5,6 +5,7 @@ import type { MapLeg, MapLine, MapMarker } from '../../components/planMapTypes.t
 import { Button, Card, Chip, EmptyState, confirm, notify } from '../../components/ui.tsx';
 import { useBottomInset } from '../../components/useBottomInset.ts';
 import { calculateTravel } from '../../lib/geo.ts';
+import { PLAN_TIMING } from '../../lib/features.ts';
 import { todayISO } from '../../lib/id.ts';
 import { formatMoney } from '../../lib/money.ts';
 import {
@@ -126,7 +127,7 @@ export default function PlanTab({
 
   // ---- sharing ----
   const sharePlan = async () => {
-    const text = buildPlanShareText(trip);
+    const text = buildPlanShareText(trip, { timing: PLAN_TIMING });
     try {
       await Share.share({ message: text, title: `${trip.name} plan` });
     } catch {
@@ -171,11 +172,11 @@ export default function PlanTab({
         unlocated++;
         return;
       }
-      markers.push({ id: s.id, lat: s.lat, lng: s.lng, label: String(i + 1), sub: formatTime(s.startMin), color });
+      markers.push({ id: s.id, lat: s.lat, lng: s.lng, label: String(i + 1), sub: PLAN_TIMING ? formatTime(s.startMin) : undefined, color });
       const before = stops[i - 1];
       if (before && hasLocation(before)) {
         lines.push({ coords: [[before.lat, before.lng], [s.lat, s.lng]], color });
-        const own = s.travelUserMin;
+        const own = PLAN_TIMING ? s.travelUserMin : undefined;
         const sug = s.suggestion && isSuggestionCurrent(s, before) ? s.suggestion : undefined;
         const text = own !== undefined ? formatDuration(own) : sug ? `${sug.source === 'estimate' ? '~' : ''}${formatDuration(sug.min)}` : '';
         if (text) legs.push({ lat: (before.lat + s.lat) / 2, lng: (before.lng + s.lng) / 2, text: `🚗 ${text}`, color });
@@ -268,12 +269,18 @@ export default function PlanTab({
                 <Text style={styles.close}>✕</Text>
               </Pressable>
             </View>
-            <Text style={styles.sheetTime}>🕐 {formatRange(selected)}</Text>
+            {PLAN_TIMING ? <Text style={styles.sheetTime}>🕐 {formatRange(selected)}</Text> : null}
             {selected.address ? <Text style={styles.muted} numberOfLines={2}>{selected.address}</Text> : null}
-            {selected.travelUserMin !== undefined || selected.suggestion ? (
+            {PLAN_TIMING && (selected.travelUserMin !== undefined || selected.suggestion) ? (
               <Text style={styles.muted}>
                 🚗 To get here: {selected.travelUserMin !== undefined ? `your estimate ${formatDuration(selected.travelUserMin)}` : 'no estimate from you'}
                 {selected.suggestion ? ` · app ${selected.suggestion.source === 'estimate' ? '~' : ''}${formatDuration(selected.suggestion.min)} (${selected.suggestion.km.toFixed(0)} km)` : ''}
+              </Text>
+            ) : null}
+            {!PLAN_TIMING && selected.suggestion ? (
+              <Text style={styles.muted}>
+                🚗 From the previous stop: {selected.suggestion.source === 'estimate' ? '~' : ''}
+                {formatDuration(selected.suggestion.min)} · {selected.suggestion.km.toFixed(0)} km
               </Text>
             ) : null}
             <View style={styles.row}>
@@ -292,7 +299,7 @@ export default function PlanTab({
     <View style={{ flex: 1 }}>
       {toolbar}
       <ScrollView contentContainerStyle={[styles.content, { paddingBottom: 40 + bottomInset }]} keyboardShouldPersistTaps="handled">
-        {nowNext && (nowNext.now || nowNext.next || dayFinished) ? (
+        {PLAN_TIMING && nowNext && (nowNext.now || nowNext.next || dayFinished) ? (
           <View style={styles.nowCard}>
             {nowNext.now ? (
               <Text style={styles.nowText}>
@@ -308,7 +315,7 @@ export default function PlanTab({
           </View>
         ) : null}
 
-        {planned > 0 ? (
+        {PLAN_TIMING && planned > 0 ? (
           <Card style={styles.budget}>
             <View style={{ flex: 1 }}>
               <Text style={styles.budgetLabel}>Planned budget</Text>
@@ -324,7 +331,7 @@ export default function PlanTab({
         {days.map((day, di) => {
           const stops = dayStops(trip.planStops, day.id);
           const stats = computeDayStats(stops);
-          const warnings = computeWarnings(stops);
+          const warnings = PLAN_TIMING ? computeWarnings(stops) : [];
           const routeUrl = dayRouteUrl(stops);
           const color = dayColor(di);
           const date = formatDayDate(day.date);
@@ -338,9 +345,10 @@ export default function PlanTab({
                   </Text>
                   {stats.count > 0 ? (
                     <Text style={styles.muted}>
-                      {stats.count} stop{stats.count === 1 ? '' : 's'} · {formatDuration(stats.spanMin)}
+                      {stats.count} stop{stats.count === 1 ? '' : 's'}
+                      {PLAN_TIMING ? ` · ${formatDuration(stats.spanMin)}` : ''}
                       {stats.km > 0 ? ` · ~${Math.round(stats.km)} km` : ''}
-                      {stats.budget > 0 ? ` · ${fmt(stats.budget)}` : ''}
+                      {PLAN_TIMING && stats.budget > 0 ? ` · ${fmt(stats.budget)}` : ''}
                     </Text>
                   ) : (
                     <Text style={styles.muted}>Nothing planned yet</Text>
@@ -456,7 +464,7 @@ function StopCard({
               <Text style={styles.numText}>{number}</Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.stopTime}>{formatRange(stop)}</Text>
+              {PLAN_TIMING ? <Text style={styles.stopTime}>{formatRange(stop)}</Text> : null}
               <Text style={[styles.stopName, stop.done && styles.strike]} numberOfLines={2}>
                 {meta.icon} {stop.name}
               </Text>
@@ -474,9 +482,9 @@ function StopCard({
             </Pressable>
           </View>
           <Text style={styles.stopMeta} numberOfLines={2}>
-            {formatDuration(stop.durationMin)}
-            {located ? ' · 📍 on map' : ' · no location'}
-            {stop.budget ? ` · 💰 ${formatMoney(stop.budget, currency)}` : ''}
+            {PLAN_TIMING ? `${formatDuration(stop.durationMin)} · ` : ''}
+            {located ? '📍 on map' : 'No location yet'}
+            {PLAN_TIMING && stop.budget ? ` · 💰 ${formatMoney(stop.budget, currency)}` : ''}
           </Text>
           {stop.notes ? (
             <Text style={styles.stopNotes} numberOfLines={2}>
@@ -525,6 +533,22 @@ function TravelLeg({
   const suggestion = stop.suggestion && isSuggestionCurrent(stop, prev) ? stop.suggestion : undefined;
   const both = hasLocation(prev) && hasLocation(stop);
   const same = suggestion && stop.travelUserMin === suggestion.min;
+  if (!PLAN_TIMING) {
+    // Just the app's calculation, for information. No input.
+    if (!suggestion && !both) return null;
+    return (
+      <View style={styles.leg}>
+        <View style={styles.legLine} />
+        <View style={styles.legBody}>
+          <Text style={suggestion ? styles.legSuggest : styles.muted}>
+            {suggestion
+              ? `🚗 ${suggestion.source === 'estimate' ? '~' : ''}${formatDuration(suggestion.min)} · ${suggestion.km.toFixed(suggestion.km < 10 ? 1 : 0)} km`
+              : '🚗 calculating…'}
+          </Text>
+        </View>
+      </View>
+    );
+  }
   return (
     <View style={styles.leg}>
       <View style={styles.legLine} />

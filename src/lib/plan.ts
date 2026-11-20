@@ -398,7 +398,8 @@ export function addDaysISO(date: string, days: number): string {
 }
 
 /** Plain-text plan for WhatsApp: every day with times, legs and a Google Maps route link. */
-export function buildPlanShareText(trip: Trip): string {
+export function buildPlanShareText(trip: Trip, options: { timing?: boolean } = {}): string {
+  const timing = options.timing ?? true;
   const lines: string[] = [`🗺️ *${trip.name} — Trip plan*`];
   const where = [trip.destination].filter(Boolean).join(' · ');
   if (where) lines.push(`📍 ${where}`);
@@ -412,21 +413,23 @@ export function buildPlanShareText(trip: Trip): string {
     }
     stops.forEach((s, i) => {
       if (i > 0) {
-        const travel = s.travelUserMin ?? s.suggestion?.min;
+        // Without timing, only the app's own calculation is shown (your estimate is not asked for).
+        const own = timing ? s.travelUserMin : undefined;
+        const travel = own ?? s.suggestion?.min;
         if (travel !== undefined) {
           const km = s.suggestion?.km ? ` · ~${Math.round(s.suggestion.km)} km` : '';
-          lines.push(`      🚗 ${s.travelUserMin !== undefined ? '' : '~'}${formatDuration(travel)}${km}`);
+          lines.push(`      🚗 ${own !== undefined ? '' : '~'}${formatDuration(travel)}${km}`);
         }
       }
-      lines.push(`${formatRange(s)}  ${STOP_TYPES[s.type].icon} ${s.name}`);
+      lines.push(timing ? `${formatRange(s)}  ${STOP_TYPES[s.type].icon} ${s.name}` : `${i + 1}. ${STOP_TYPES[s.type].icon} ${s.name}`);
       if (s.notes) lines.push(`      📝 ${s.notes.split('\n')[0]}`);
-      if (s.budget) lines.push(`      💰 ${formatMoney(s.budget, trip.currency)}`);
+      if (timing && s.budget) lines.push(`      💰 ${formatMoney(s.budget, trip.currency)}`);
     });
     const url = dayRouteUrl(stops);
     if (url) lines.push(`🧭 Route: ${url}`);
   }
   const total = plannedBudget(trip.planStops);
-  if (total > 0) lines.push('', `💰 Planned budget: ${formatMoney(total, trip.currency)}`);
+  if (timing && total > 0) lines.push('', `💰 Planned budget: ${formatMoney(total, trip.currency)}`);
   lines.push('', 'Shared via Kontri');
   return lines.join('\n');
 }

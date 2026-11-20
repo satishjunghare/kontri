@@ -6,6 +6,7 @@ import { Button, Card, Chip, EmptyState, Field, confirm } from '../components/ui
 import { useBottomInset } from '../components/useBottomInset.ts';
 import type { MapMarker } from '../components/planMapTypes.ts';
 import { useTravelSuggestion } from '../hooks/useTravelSuggestion.ts';
+import { PLAN_TIMING } from '../lib/features.ts';
 import { resolveMapText, searchPlaces } from '../lib/geo.ts';
 import type { PlaceResult } from '../lib/geo.ts';
 import { currencySymbol, minorToInput, parseAmount } from '../lib/money.ts';
@@ -126,9 +127,9 @@ export default function StopFormScreen({ navigation, route }: ScreenProps<'StopF
   const budget = budgetText.trim() ? parseAmount(budgetText, { allowZero: true }) : undefined;
   const errors = {
     name: name.trim() ? undefined : 'What is this stop called?',
-    duration: durationMin !== null && durationMin > 0 ? undefined : 'Enter how long you will stay, like 1h 30m',
-    travel: travelInvalid ? 'Enter a time like 1h 15m or 45' : undefined,
-    budget: budget === null ? 'Enter a valid amount' : undefined,
+    duration: !PLAN_TIMING || (durationMin !== null && durationMin > 0) ? undefined : 'Enter how long you will stay, like 1h 30m',
+    travel: PLAN_TIMING && travelInvalid ? 'Enter a time like 1h 15m or 45' : undefined,
+    budget: PLAN_TIMING && budget === null ? 'Enter a valid amount' : undefined,
   };
   const hasErrors = Object.values(errors).some(Boolean);
   const show = (key: keyof typeof errors) => (submitted ? errors[key] : undefined);
@@ -161,24 +162,37 @@ export default function StopFormScreen({ navigation, route }: ScreenProps<'StopF
 
   const save = () => {
     setSubmitted(true);
-    if (hasErrors || durationMin === null) return;
+    if (hasErrors) return;
     const common = {
       type,
       name: name.trim(),
       address: location?.address,
       lat: location?.lat,
       lng: location?.lng,
-      startMin,
-      durationMin,
       notes: notes.trim() || undefined,
-      budget: budget ?? undefined,
     };
+    // With timing switched off, times, stay length, budget and your estimate are left exactly as they are.
+    const timing = PLAN_TIMING && durationMin !== null ? { startMin, durationMin, budget: budget ?? undefined } : null;
     if (existing) {
       if (dayId !== existing.dayId) moveStopToDay(trip.id, existing.id, dayId);
-      updateStop(trip.id, existing.id, { ...common, travelUserMin: travelUserMin ?? null }, shift && laterCount > 0 && dayId === existing.dayId);
+      updateStop(
+        trip.id,
+        existing.id,
+        timing ? { ...common, ...timing, travelUserMin: travelUserMin ?? null } : common,
+        !!timing && shift && laterCount > 0 && dayId === existing.dayId,
+      );
       if (suggestion) setStopSuggestion(trip.id, existing.id, suggestion);
     } else {
-      addStop(trip.id, { ...common, dayId, travelUserMin: travelUserMin ?? undefined, suggestion: suggestion ?? undefined });
+      addStop(trip.id, {
+        ...common,
+        dayId,
+        // Sensible values, kept in case timing is switched on later.
+        startMin: timing?.startMin ?? defaultNextStartMin(prev, suggestion?.min ?? 0),
+        durationMin: timing?.durationMin ?? STOP_TYPES[type].defaultDurationMin,
+        budget: timing?.budget,
+        travelUserMin: PLAN_TIMING ? (travelUserMin ?? undefined) : undefined,
+        suggestion: suggestion ?? undefined,
+      });
     }
     navigation.goBack();
   };
@@ -342,7 +356,7 @@ export default function StopFormScreen({ navigation, route }: ScreenProps<'StopF
         ) : null}
 
         {/* Travel from the previous stop: your estimate and the app's calculation, side by side but separate */}
-        {prev ? (
+        {PLAN_TIMING && prev ? (
           <>
             <Text style={styles.label}>Travel from “{prev.name}”</Text>
             <Card style={{ gap: 12, marginBottom: 16 }}>
@@ -389,6 +403,8 @@ export default function StopFormScreen({ navigation, route }: ScreenProps<'StopF
           </>
         ) : null}
 
+        {PLAN_TIMING ? (
+          <>
         {/* Times */}
         <View style={styles.row2}>
           <TimeField
@@ -460,6 +476,8 @@ export default function StopFormScreen({ navigation, route }: ScreenProps<'StopF
           keyboardType="decimal-pad"
           error={show('budget')}
         />
+          </>
+        ) : null}
         <Field
           label="Notes (optional)"
           placeholder="Tickets, booking details, things to remember…"
@@ -469,7 +487,7 @@ export default function StopFormScreen({ navigation, route }: ScreenProps<'StopF
           style={{ minHeight: 80, textAlignVertical: 'top' }}
         />
 
-        {existing && laterCount > 0 && dayId === existing.dayId ? (
+        {PLAN_TIMING && existing && laterCount > 0 && dayId === existing.dayId ? (
           <View style={styles.switchRow}>
             <View style={{ flex: 1 }}>
               <Text style={styles.switchLabel}>Move later stops too</Text>

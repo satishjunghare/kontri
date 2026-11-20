@@ -254,3 +254,25 @@ test('next day label and date keep a Day 0 and follow the trip start', () => {
   assert.equal(nextDayDate([d('Day 1', '2026-12-20')], '2026-12-20'), '2026-12-21');
   assert.equal(nextDayDate([d('Day 1')], '2026-12-20'), undefined);
 });
+
+test('share text without timing keeps the order, notes and the app calculation, but no times or budgets', () => {
+  const trip = {
+    name: 'Fort Trip',
+    currency: 'INR',
+    planDays: [{ id: 'd1', label: 'Day 1', date: '2026-12-20' }],
+    planStops: [
+      stop({ id: '1', name: 'Rohida', startMin: 450, durationMin: 210, lat: 18.3, lng: 73.6, budget: 30000 }),
+      stop({
+        id: '2', name: 'Lunch @ Kenjalgad', type: 'meal', startMin: 810, durationMin: 90, lat: 18.4, lng: 73.7,
+        travelUserMin: 20, suggestion: { min: 62, km: 28.4, source: 'road', key: 'k' }, notes: 'Veg thali', budget: 60000,
+      }),
+    ],
+  } as unknown as Trip;
+  const text = buildPlanShareText(trip, { timing: false });
+  assert.match(text, /1\. 📍 Rohida/);
+  assert.match(text, /2\. 🍽️ Lunch @ Kenjalgad/);
+  assert.match(text, /🚗 ~1h 2m · ~28 km/); // the app's number, not your hidden estimate of 20m
+  assert.match(text, /📝 Veg thali/);
+  assert.match(text, /Route: https:\/\/www\.google\.com\/maps\/dir\//);
+  assert.doesNotMatch(text, /AM|PM|💰|budget/i);
+});
