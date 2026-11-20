@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import MapPickerModal from '../components/MapPickerModal.tsx';
-import TimeField from '../components/TimeField.tsx';
+import TimeField, { pickTimeAndroid } from '../components/TimeField.tsx';
 import { Button, Card, Chip, EmptyState, Field, confirm } from '../components/ui.tsx';
 import { useBottomInset } from '../components/useBottomInset.ts';
 import type { MapMarker } from '../components/planMapTypes.ts';
@@ -53,6 +53,7 @@ export default function StopFormScreen({ navigation, route }: ScreenProps<'StopF
   const [travelText, setTravelText] = useState(existing?.travelUserMin !== undefined ? formatDuration(existing.travelUserMin) : '');
   const [budgetText, setBudgetText] = useState(existing?.budget ? minorToInput(existing.budget) : '');
   const [notes, setNotes] = useState(existing?.notes ?? '');
+  const [reach, setReach] = useState<number | null>(existing?.reachMin ?? null);
   const [shift, setShift] = useState(true);
   const [submitted, setSubmitted] = useState(false);
 
@@ -134,6 +135,13 @@ export default function StopFormScreen({ navigation, route }: ScreenProps<'StopF
   const hasErrors = Object.values(errors).some(Boolean);
   const show = (key: keyof typeof errors) => (submitted ? errors[key] : undefined);
 
+  // Reach time: when you want to get to this stop. Starts from the previous stop's reach time + 1 h.
+  const addReach = () => {
+    const initial = prev?.reachMin !== undefined ? Math.min(prev.reachMin + 60, 24 * 60 - 1) : 9 * 60;
+    if (Platform.OS === 'android') pickTimeAndroid(initial, setReach);
+    else setReach(initial);
+  };
+
   const changeType = (t: StopType) => {
     setType(t);
     if (!durationTouched) setDurationText(formatDuration(STOP_TYPES[t].defaultDurationMin));
@@ -171,6 +179,8 @@ export default function StopFormScreen({ navigation, route }: ScreenProps<'StopF
       lng: location?.lng,
       notes: notes.trim() || undefined,
     };
+    // The reach time is its own field. (With the timing details on, the Start time is used instead.)
+    const reachPatch = PLAN_TIMING ? {} : { reachMin: reach };
     // With timing switched off, times, stay length, budget and your estimate are left exactly as they are.
     const timing = PLAN_TIMING && durationMin !== null ? { startMin, durationMin, budget: budget ?? undefined } : null;
     if (existing) {
@@ -178,7 +188,7 @@ export default function StopFormScreen({ navigation, route }: ScreenProps<'StopF
       updateStop(
         trip.id,
         existing.id,
-        timing ? { ...common, ...timing, travelUserMin: travelUserMin ?? null } : common,
+        { ...(timing ? { ...common, ...timing, travelUserMin: travelUserMin ?? null } : common), ...reachPatch },
         !!timing && shift && laterCount > 0 && dayId === existing.dayId,
       );
       if (suggestion) setStopSuggestion(trip.id, existing.id, suggestion);
@@ -191,6 +201,7 @@ export default function StopFormScreen({ navigation, route }: ScreenProps<'StopF
         durationMin: timing?.durationMin ?? STOP_TYPES[type].defaultDurationMin,
         budget: timing?.budget,
         travelUserMin: PLAN_TIMING ? (travelUserMin ?? undefined) : undefined,
+        reachMin: PLAN_TIMING ? undefined : (reach ?? undefined),
         suggestion: suggestion ?? undefined,
       });
     }
@@ -353,6 +364,26 @@ export default function StopFormScreen({ navigation, route }: ScreenProps<'StopF
               ))}
             </View>
           </>
+        ) : null}
+
+        {/* Reach time: when you want to get there */}
+        {!PLAN_TIMING ? (
+          <View style={{ marginBottom: 16 }}>
+            {reach === null ? (
+              <>
+                <Text style={styles.label}>Reach time (optional)</Text>
+                <Button title="🕐 Set reach time" variant="secondary" onPress={addReach} />
+                <Text style={[styles.muted, { marginTop: 6 }]}>The time you want to get to this place.</Text>
+              </>
+            ) : (
+              <View style={styles.row2}>
+                <TimeField label="Reach time" valueMin={reach} onChange={setReach} />
+                <View style={{ justifyContent: 'flex-end', alignSelf: 'stretch' }}>
+                  <Button title="Clear" variant="danger" onPress={() => setReach(null)} style={{ paddingVertical: 11, minHeight: 46 }} />
+                </View>
+              </View>
+            )}
+          </View>
         ) : null}
 
         {/* Travel from the previous stop: your estimate and the app's calculation, side by side but separate */}

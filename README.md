@@ -51,7 +51,7 @@ your WhatsApp group as a clean bill.
 | 💰 | **Advance fund (kitty)** | Record money collected in advance ("everyone gives ₹2,000"), choose who holds the cash, and pay expenses from the fund; leftover cash is returned in the settlement |
 | ✅ | **Settle up** | Each member's share, who owes and who gets back, and the **fewest payments** needed to settle |
 | 📲 | **WhatsApp bill** | Share the settlement as a receipt-style bill: expenses, totals, shares and amounts due, grouped by who receives the money |
-| 🗺️ | **Trip plan** | Plan the whole trip day by day: the places you will visit, in order, plus meals, shopping, fuel stops and overnight stays, each with notes. Add a place by search, by dropping a pin on the map, or by pasting a Google Maps link |
+| 🗺️ | **Trip plan** | Plan the whole trip day by day: the places you will visit, in order, plus meals, shopping, fuel stops and overnight stays, each with notes and an optional **reach time** (when you want to get there). Add a place by search, by dropping a pin on the map, or by pasting a Google Maps link |
 | 🚗 | **Travel times** | The app calculates the road distance and driving time between consecutive stops and shows it in the list and on the map (a rough straight-line guess when offline) |
 | 📍 | **Map view** | All the stops on a map, numbered and coloured by day, joined by route lines. Tap a pin for details, navigation in Google Maps, or to add it as an expense |
 | 🧭 | **On the trip** | Tick stops as done, open any stop or the whole day's route in Google Maps, and share the plan on WhatsApp |
@@ -59,7 +59,7 @@ your WhatsApp group as a clean bill.
 | 📷 | **Photos** | Take photos or pick from your gallery, add captions, view full screen, and choose a cover photo that shows on the trips list. Photos are shrunk and stay on your phone |
 | 📴 | **Offline & private** | Everything stays on your phone. No login, no internet needed, no data sent anywhere |
 
-> **Planning details switched off for now:** start times, stay lengths, planned budgets, your own travel-time estimates, "not enough time" warnings and Now / Next are built but hidden to keep the planner simple. Turn them back on with `PLAN_TIMING` in `src/lib/features.ts`.
+> **Planning details switched off for now:** start times, stay lengths, planned budgets, your own travel-time estimates, "not enough time" warnings and Now / Next are built but hidden to keep the planner simple (the optional reach time stays). Turn them back on with `PLAN_TIMING` in `src/lib/features.ts`.
 
 ## How it works
 

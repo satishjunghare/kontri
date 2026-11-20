@@ -172,7 +172,7 @@ export default function PlanTab({
         unlocated++;
         return;
       }
-      markers.push({ id: s.id, lat: s.lat, lng: s.lng, label: String(i + 1), sub: PLAN_TIMING ? formatTime(s.startMin) : undefined, color });
+      markers.push({ id: s.id, lat: s.lat, lng: s.lng, label: String(i + 1), sub: PLAN_TIMING ? formatTime(s.startMin) : s.reachMin !== undefined ? formatTime(s.reachMin) : undefined, color });
       const before = stops[i - 1];
       if (before && hasLocation(before)) {
         lines.push({ coords: [[before.lat, before.lng], [s.lat, s.lng]], color });
@@ -269,7 +269,11 @@ export default function PlanTab({
                 <Text style={styles.close}>✕</Text>
               </Pressable>
             </View>
-            {PLAN_TIMING ? <Text style={styles.sheetTime}>🕐 {formatRange(selected)}</Text> : null}
+            {PLAN_TIMING ? (
+              <Text style={styles.sheetTime}>🕐 {formatRange(selected)}</Text>
+            ) : selected.reachMin !== undefined ? (
+              <Text style={styles.sheetTime}>🕐 Reach by {formatTime(selected.reachMin)}</Text>
+            ) : null}
             {selected.address ? <Text style={styles.muted} numberOfLines={2}>{selected.address}</Text> : null}
             {PLAN_TIMING && (selected.travelUserMin !== undefined || selected.suggestion) ? (
               <Text style={styles.muted}>
@@ -464,7 +468,11 @@ function StopCard({
               <Text style={styles.numText}>{number}</Text>
             </View>
             <View style={{ flex: 1 }}>
-              {PLAN_TIMING ? <Text style={styles.stopTime}>{formatRange(stop)}</Text> : null}
+              {PLAN_TIMING ? (
+                <Text style={styles.stopTime}>{formatRange(stop)}</Text>
+              ) : stop.reachMin !== undefined ? (
+                <Text style={styles.stopTime}>🕐 Reach by {formatTime(stop.reachMin)}</Text>
+              ) : null}
               <Text style={[styles.stopName, stop.done && styles.strike]} numberOfLines={2}>
                 {meta.icon} {stop.name}
               </Text>

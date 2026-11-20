@@ -6,5 +6,8 @@
  * (with notes, a location on the map, and the app's calculated distance and travel time).
  * Nothing was removed: the screens, saved data and logic are all still there.
  * Set this to true to bring all of it back.
+ *
+ * The optional "Reach time" of a stop (when you want to get there) is separate and always available;
+ * with this switch on, the Start time takes its place.
  */
 export const PLAN_TIMING = false as boolean;

@@ -81,6 +81,11 @@ export interface PlanStop {
   address?: string;
   lat?: number;
   lng?: number;
+  /**
+   * The time you plan to reach this stop, in minutes after midnight. Optional: not every stop needs
+   * one. Separate from the start time below, which belongs to the (currently hidden) timing details.
+   */
+  reachMin?: number;
   /** Start time, in minutes after midnight (0-1439). */
   startMin: number;
   /** How long you stay, in minutes. A stay can run past midnight. */

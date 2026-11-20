@@ -129,6 +129,8 @@ export interface StopPatch {
   budget?: number;
   /** Pass null to clear your own estimate. */
   travelUserMin?: number | null;
+  /** The time you want to reach this stop. Pass null to clear it. */
+  reachMin?: number | null;
   done?: boolean;
 }
 
@@ -142,7 +144,7 @@ export function applyStopEdit(stops: PlanStop[], stopId: string, patch: StopPatc
   const target = stops.find((s) => s.id === stopId);
   if (!target) return stops;
 
-  const { travelUserMin, ...rest } = patch;
+  const { travelUserMin, reachMin, ...rest } = patch;
   let startMin = patch.startMin ?? target.startMin;
   if (patch.startMin === undefined && travelUserMin !== undefined && shift) {
     const newTravel = travelUserMin ?? target.suggestion?.min ?? 0;
@@ -152,6 +154,10 @@ export function applyStopEdit(stops: PlanStop[], stopId: string, patch: StopPatc
   if (travelUserMin !== undefined) {
     if (travelUserMin === null) delete updated.travelUserMin;
     else updated.travelUserMin = travelUserMin;
+  }
+  if (reachMin !== undefined) {
+    if (reachMin === null) delete updated.reachMin;
+    else updated.reachMin = reachMin;
   }
   const delta = stopEndMin(updated) - stopEndMin(target);
 
@@ -421,7 +427,8 @@ export function buildPlanShareText(trip: Trip, options: { timing?: boolean } = {
           lines.push(`      🚗 ${own !== undefined ? '' : '~'}${formatDuration(travel)}${km}`);
         }
       }
-      lines.push(timing ? `${formatRange(s)}  ${STOP_TYPES[s.type].icon} ${s.name}` : `${i + 1}. ${STOP_TYPES[s.type].icon} ${s.name}`);
+      const reach = s.reachMin !== undefined ? ` — reach by ${formatTime(s.reachMin)}` : '';
+      lines.push(timing ? `${formatRange(s)}  ${STOP_TYPES[s.type].icon} ${s.name}` : `${i + 1}. ${STOP_TYPES[s.type].icon} ${s.name}${reach}`);
       if (s.notes) lines.push(`      📝 ${s.notes.split('\n')[0]}`);
       if (timing && s.budget) lines.push(`      💰 ${formatMoney(s.budget, trip.currency)}`);
     });

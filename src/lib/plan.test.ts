@@ -276,3 +276,28 @@ test('share text without timing keeps the order, notes and the app calculation, 
   assert.match(text, /Route: https:\/\/www\.google\.com\/maps\/dir\//);
   assert.doesNotMatch(text, /AM|PM|💰|budget/i);
 });
+
+test('reach time can be set and cleared on a stop without moving anything', () => {
+  const a = stop({ id: 'a', startMin: 450, durationMin: 210 });
+  const b = stop({ id: 'b', startMin: 780, durationMin: 90 });
+  const set = applyStopEdit([a, b], 'a', { reachMin: 450 }, true);
+  assert.equal(set[0].reachMin, 450);
+  assert.deepEqual(set.map((s) => s.startMin), [450, 780]); // no shifting
+  const cleared = applyStopEdit(set, 'a', { reachMin: null }, true);
+  assert.equal('reachMin' in cleared[0], false);
+  const untouched = applyStopEdit(set, 'a', { notes: 'x' }, false);
+  assert.equal(untouched[0].reachMin, 450); // other edits keep it
+  assert.equal(formatTime(450), '7:30 AM');
+});
+
+test('share text shows the reach time of a stop, only where one is set', () => {
+  const trip = {
+    name: 'Fort Trip',
+    currency: 'INR',
+    planDays: [{ id: 'd1', label: 'Day 1' }],
+    planStops: [stop({ id: '1', name: 'Rohida', reachMin: 450 }), stop({ id: '2', name: 'Lunch', type: 'meal' })],
+  } as unknown as Trip;
+  const text = buildPlanShareText(trip, { timing: false });
+  assert.match(text, /1\. 📍 Rohida — reach by 7:30 AM/);
+  assert.match(text, /2\. 🍽️ Lunch$/m);
+});

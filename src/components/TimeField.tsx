@@ -4,6 +4,20 @@ import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-na
 import { formatTime, parseTime } from '../lib/plan.ts';
 import { colors } from '../theme.ts';
 
+/** Opens the Android time picker. Calls `onPicked` only if a time is confirmed (not if cancelled). */
+export function pickTimeAndroid(initialMin: number, onPicked: (min: number) => void) {
+  const value = new Date();
+  value.setHours(Math.floor(initialMin / 60), initialMin % 60, 0, 0);
+  DateTimePickerAndroid.open({
+    value,
+    mode: 'time',
+    is24Hour: false,
+    onChange: (event, date) => {
+      if (event.type === 'set' && date) onPicked(date.getHours() * 60 + date.getMinutes());
+    },
+  });
+}
+
 /**
  * A time of day, in minutes after midnight. On Android, tapping it opens the phone's time picker.
  * Elsewhere (the browser preview) it is a text box that understands "7:30 AM", "19:30" and so on.
@@ -26,18 +40,7 @@ export default function TimeField({
     if (parsed !== null && parsed !== valueMin) onChange(parsed);
   };
 
-  const openPicker = () => {
-    const value = new Date();
-    value.setHours(Math.floor(valueMin / 60), valueMin % 60, 0, 0);
-    DateTimePickerAndroid.open({
-      value,
-      mode: 'time',
-      is24Hour: false,
-      onChange: (event, date) => {
-        if (event.type === 'set' && date) onChange(date.getHours() * 60 + date.getMinutes());
-      },
-    });
-  };
+  const openPicker = () => pickTimeAndroid(valueMin, onChange);
 
   return (
     <View style={styles.wrap}>
